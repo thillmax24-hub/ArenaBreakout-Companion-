@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101613">
+<title>Arena Breakout Companion</title>
+<style>
+:root{color-scheme:dark;--bg:#0b100e;--panel:#141d18;--line:#2b3b30;--green:#c2ee75;--muted:#9cad9f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#edf4ed;font:15px system-ui,sans-serif}
+button,input,select{font:inherit}
+button,select,.upload{background:#202d24;color:#edf4ed;border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+button,.upload{cursor:pointer}
+button:hover,.upload:hover{border-color:var(--green)}
+button:focus-visible,input:focus-visible,select:focus-visible,.upload:focus-within{outline:2px solid var(--green);outline-offset:3px}
+button.active,.primary{background:var(--green);color:#152014}
+header{max-width:1400px;margin:auto;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.brand{font-size:20px;font-weight:850;letter-spacing:.6px}
+.brand small{display:block;font-size:11px;color:var(--green);letter-spacing:3px;margin-top:5px}
+main{max-width:1400px;margin:auto;padding:0 24px 30px}
+.hero{padding:18px 0 24px}
+h1{font-size:clamp(28px,5vw,46px);margin:0 0 10px}
+p{color:var(--muted);line-height:1.6}
+.badge{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;color:var(--green)}
+.layout{display:grid;grid-template-columns:300px 1fr;gap:18px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+h2{font-size:17px;margin:0 0 15px}
+label.field{display:block;color:var(--muted);font-size:13px;margin-bottom:7px}
+select,input[type=text]{width:100%;margin-bottom:15px}
+input[type=text]{background:#0e1510;color:white;border:1px solid var(--line);border-radius:9px;padding:12px}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tools button{text-align:left;font-size:13px}
+.help{font-size:12px}
+.upload{display:block;text-align:center;margin-top:15px}
+.upload input{position:absolute;width:1px;height:1px;opacity:0}
+.filters{display:flex;flex-wrap:wrap;gap:12px;margin:15px 0}
+.filters label{font-size:12px;color:var(--muted)}
+.map-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.map-head h2{margin:0}
+.zoom{display:flex;gap:5px;align-items:center}
+.zoom button{padding:7px 11px}
+#viewport{height:560px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#0a100c}
+#board{position:relative;width:100%;aspect-ratio:1;min-height:300px;overflow:hidden;background-color:#111c14;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:40px 40px}
+#mapImage{position:absolute;width:100%;height:100%;object-fit:fill;pointer-events:none}
+#routeSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:30px;pointer-events:none}
+#empty strong{font-size:24px}
+#empty p{max-width:370px}
+.marker{position:absolute;transform:translate(-50%,-50%);width:32px;height:32px;padding:0;border-radius:50%;border:2px solid white;color:#09110b;font-weight:900;box-shadow:0 3px 12px #0009;z-index:2}
+.marker.player{background:#c2ee75}
+.marker.loot{background:#f3ca64}
+.marker.exit{background:#66c6fa}
+.marker.note{background:#d0a0fb}
+.marker.route{background:#ffffff;width:23px;height:23px;font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:15px;padding-top:12px;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.list{margin-top:18px}
+#markerList{display:grid;gap:8px;max-height:300px;overflow:auto}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;background:#0d1510;border-radius:9px}
+.row span{overflow-wrap:anywhere}
+.row small{display:block;color:var(--muted);margin-top:4px}
+.row button{padding:6px 10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:26px}
+#status{min-height:20px;color:var(--green);font-size:12px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}header,main{padding-left:16px;padding-right:16px}#viewport{height:440px}}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">ARENA BREAKOUT<small>COMPANION / TACTICAL PLANNER</small></div>
+<button id="language">EN</button>
+</header>
+<main>
+<section class="hero">
+<span class="badge" data-i18n="badge"></span>
+<h1 data-i18n="title"></h1>
+<p data-i18n="intro"></p>
+</section>
+<div class="layout">
+<aside>
+<section class="panel">
+<h2 data-i18n="planning"></h2>
+<label class="field" for="mapSelect" data-i18n="map"></label>
+<select id="mapSelect">
+<option value="farm">Farm</option>
+<option value="valley">Valley</option>
+<option value="northridge">Northridge</option>
+<option value="armory">Armory</option>
+<option value="tv">TV Station</option>
+<option value="custom">Custom</option>
+</select>
+<label class="field" for="markerName" data-i18n="name"></label>
+<input id="markerName" type="text" maxlength="80">
+<div class="tools">
+<button data-tool="player" data-i18n="player"></button>
+<button data-tool="loot" data-i18n="loot"></button>
+<button data-tool="exit" data-i18n="exit"></button>
+<button data-tool="note" data-i18n="note"></button>
+<button data-tool="route" data-i18n="route"></button>
+<button data-tool="inspect" data-i18n="inspect"></button>
+</div>
+<p class="help" data-i18n="instructions"></p>
+<label class="upload">
+<span data-i18n="upload"></span>
+<input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp">
+</label>
+<p class="help" data-i18n="imageHelp"></p>
+<div id="status" role="status" aria-live="polite"></div>
+</section>
+<section class="panel list">
+<h2 data-i18n="markers"></h2>
+<div id="markerList"></div>
+<div class="actions">
+<button id="undo" data-i18n="undo"></button>
+<button id="clear" data-i18n="clear"></button>
+</div>
+</section>
+</aside>
+<section class="panel">
+<div class="map-head">
+<h2 id="mapTitle"></h2>
+<div class="zoom">
+<button id="zoomOut" aria-label="Zoom out">−</button>
+<span id="zoomValue">100%</span>
+<button id="zoomIn" aria-label="Zoom in">+</button>
+</div>
+</div>
+<div class="filters" id="filters"></div>
+<div id="viewport">
+<div id="board">
+<img id="mapImage" alt="" hidden>
+<svg id="routeSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+<div id="empty">
+<strong data-i18n="emptyTitle"></strong>
+<p data-i18n="emptyText"></p>
+</div>
+<div id="markerLayer"></div>
+</div>
+</div>
+<div class="legend">
+<span><i class="dot" style="background:#c2ee75"></i><span data-i18n="player"></span></span>
+<span><i class="dot" style="background:#f3ca64"></i><span data-i18n="loot"></span></span>
+<span><i class="dot" style="background:#66c6fa"></i><span data-i18n="exit"></span></span>
+<span><i class="dot" style="background:#d0a0fb"></i><span data-i18n="note"></span></span>
+</div>
+<p class="help" data-i18n="liveNotice"></p>
+</section>
+</div>
+</main>
+<footer data-i18n="footer"></footer>
+<script>
+"use strict";
+
+const translations={
+de:{
+badge:"MANUELLE KARTENPLANUNG",
+title:"Plane deinen nächsten Raid.",
+intro:"Kartenbilder laden, deine Position markieren und persönliche Routen planen.",
+planning:"Raid-Planung",map:"Karte / Arbeitsbereich",name:"Marker-Beschriftung",
+player:"Position",loot:"Loot",exit:"Ausgang",note:"Notiz",route:"Route",
+inspect:"Ansehen",instructions:"Werkzeug auswählen und auf die Karte tippen. Marker antippen, um ihre Details zu sehen. Eine neue Position ersetzt die vorherige.",
+upload:"Kartenbild laden",imageHelp:"Lade ein eigenes Kartenbild (PNG, JPG oder WebP). Ein anderes Bild setzt die Marker dieses Arbeitsbereichs zurück.",
+markers:"Deine Marker",undo:"Zurück",clear:"Marker löschen",
+emptyTitle:"Dein Karten-Arbeitsbereich",
+emptyText:"Lade zuerst ein Kartenbild. Es sind noch keine echten Spielkarten oder Loot-Daten hinterlegt.",
+emptyList:"Noch keine Marker gesetzt.",
+emptyImage:"Lade zuerst ein Kartenbild.",
+confirmClear:"Alle Marker auf dieser Karte löschen?",
+confirmImage:"Neues Kartenbild laden und bestehende Marker auf dieser Karte zurücksetzen?",
+liveNotice:"Positionen werden manuell gesetzt. Keine Verbindung zum Spiel und keine automatische Live-Ortung. Marker und Kartenbilder werden nur in diesem Browser gespeichert.",
+footer:"Inoffizielles Fanprojekt · Nicht mit den Entwicklern verbunden",
+saved:"Im Browser gespeichert.",storageError:"Speichern fehlgeschlagen. Änderungen sind nur bis zum Neuladen verfügbar.",
+imageError:"Dieses Bild konnte nicht geladen werden.",
+largeImage:"Bitte ein Bild unter 15 MB auswählen.",
+remove:"Entfernen",details:"Marker-Details",imageAlt:"Eigene Planungskarte",
+coordinates:"Bildposition",routePoint:"Routenpunkt"
+},
+en:{
+badge:"MANUAL MAP PLANNING",
+title:"Plan your next raid.",
+intro:"Upload map images, mark your position and plan personal routes.",
+planning:"Raid planning",map:"Map / workspace",name:"Marker label",
+player:"Position",loot:"Loot",exit:"Extraction",note:"Note",route:"Route",
+inspect:"Inspect",instructions:"Select a tool and tap the map. Tap markers to view details. A new position replaces the previous one.",
+upload:"Upload map image",imageHelp:"Upload your own map image (PNG, JPG or WebP). Replacing it resets this workspace's markers.",
+markers:"Your markers",undo:"Undo",clear:"Clear markers",
+emptyTitle:"Your map workspace",
+emptyText:"Upload a map image first. No actual game maps or loot data have been added yet.",
+emptyList:"No markers yet.",emptyImage:"Upload a map image first.",
+confirmClear:"Delete all markers on this map?",
+confirmImage:"Replace the map image and reset this map's existing markers?",
+liveNotice:"Positions are set manually. No game connection or automatic live tracking. Markers and map images are stored only in this browser.",
+footer:"Unofficial fan project · Not affiliated with the developers",
+saved:"Saved in this browser.",storageError:"Saving failed. Changes are available only until this page reloads.",
+imageError:"This image could not be loaded.",largeImage:"Please select an image under 15 MB.",
+remove:"Remove",details:"Marker details",imageAlt:"Custom planning map",
+coordinates:"Image position",routePoint:"Route point"
+}
+};
+
+const $=id=>document.getElementById(id);
+const types=["player","loot","exit","note","route"];
+const symbols={player:"P",loot:"L",exit:"E",note:"N"};
+const key="abi-companion-planner-v1";
+let lang="de",selected="farm",tool="inspect",zoom=1;
+let maps={},history={};
+const visible=new Set(types);
+const t=k=>translations[lang][k]||k;
+
+try{
+const saved=JSON.parse(localStorage.getItem(key)||"null");
+if(saved&&typeof saved==="object"){
+lang=saved.lang==="en"?"en":"de";
+if(saved.maps&&typeof saved.maps==="object"){
+for(const [id,value] of Object.entries(saved.maps)){
+if(!value||typeof value!=="object")continue;
+maps[id]={
+image:typeof value.image==="string"&&/^data:image\/(png|jpeg|webp);base64,/.test(value.image)?value.image:"",
+ratio:Number.isFinite(value.ratio)&&value.ratio>0?value.ratio:1,
+markers:Array.isArray(value.markers)?value.markers.filter(m=>
+m&&types.includes(m.type)&&typeof m.id==="string"&&
+Number.isFinite(m.x)&&Number.isFinite(m.y)&&
+m.x>=0&&m.x<=100&&m.y>=0&&m.y<=100
+).map(m=>({...m,name:String(m.name||"").slice(0,80)})):[]
+};
+}
+}
+}
+}catch(e){}
+
+function state(){
+if(!maps[selected])maps[selected]={image:"",ratio:1,markers:[]};
+return maps[selected];
+}
+function save(){
+try{
+localStorage.setItem(key,JSON.stringify({lang,maps}));
+$("status").textContent=t("saved");
+}catch(e){
+$("status").textContent=t("storageError");
+}
+}
+function checkpoint(){
+if(!history[selected])history[selected]=[];
+history[selected].push(state().markers.map(m=>({...m})));
+if(history[selected].length>30)history[selected].shift();
+}
+function removeMarker(id){
+checkpoint();
+state().markers=state().markers.filter(m=>m.id!==id);
+save();render();
+}
+function render(){
+document.documentElement.lang=lang;
+document.querySelectorAll("[data-i18n]").forEach(el=>{
+el.textContent=t(el.dataset.i18n);
+});
+$("language").textContent=lang==="de"?"EN":"DE";
+$("markerName").placeholder=lang==="de"?"z. B. Treffpunkt":"e.g. Meeting point";
+$("mapTitle").textContent=$("mapSelect").selectedOptions[0].textContent;
+document.querySelectorAll("[data-tool]").forEach(b=>{
+b.classList.toggle("active",b.dataset.tool===tool);
+b.setAttribute("aria-pressed",String(b.dataset.tool===tool));
+});
+$("filters").replaceChildren();
+types.forEach(type=>{
+const label=document.createElement("label");
+const input=document.createElement("input");
+input.type="checkbox";input.checked=visible.has(type);
+input.addEventListener("change",()=>{
+input.checked?visible.add(type):visible.delete(type);render();
+});
+label.append(input,document.createTextNode(" "+t(type)));
+$("filters").append(label);
+});
+const s=state();
+$("board").style.width=(zoom*100)+"%";
+$("board").style.aspectRatio=String(s.ratio);
+$("zoomValue").textContent=Math.round(zoom*100)+"%";
+$("mapImage").hidden=!s.image;
+if(s.image)$("mapImage").src=s.image;
+else $("mapImage").removeAttribute("src");
+$("mapImage").alt=t("imageAlt");
+$("empty").style.display=s.image?"none":"grid";
+$("markerLayer").replaceChildren();
+$("markerList").replaceChildren();
+$("routeSvg").replaceChildren();
+const route=s.markers.filter(m=>m.type==="route");
+if(visible.has("route")&&route.length>1){
+const line=document.createElementNS("http://www.w3.org/2000/svg","polyline");
+line.setAttribute("points",route.map(m=>`${m.x},${m.y}`).join(" "));
+line.setAttribute("fill","none");
+line.setAttribute("stroke","#c2ee75");
+line.setAttribute("stroke-width","3");
+line.setAttribute("vector-effect","non-scaling-stroke");
+$("routeSvg").append(line);
+}
+if(!s.markers.length){
+const p=document.createElement("p");p.textContent=t("emptyList");
+$("markerList").append(p);
+}
+s.markers.forEach(m=>{
+const routeIndex=route.findIndex(r=>r.id===m.id)+1;
+const label=m.name||(m.type==="route"?t("routePoint")+" "+routeIndex:t(m.type));
+if(visible.has(m.type)){
+const b=document.createElement("button");
+b.className="marker "+m.type;
+b.style.left=m.x+"%";b.style.top=m.y+"%";
+b.textContent=m.type==="route"?routeIndex:symbols[m.type];
+b.title=label;b.setAttribute("aria-label",label);
+b.addEventListener("click",e=>{
+e.stopPropagation();
+alert(label+"\n"+t(m.type)+"\n"+t("coordinates")+": "+m.x.toFixed(1)+"%, "+m.y.toFixed(1)+"%");
+});
+$("markerLayer").append(b);
+}
+const row=document.createElement("div");row.className="row";
+const text=document.createElement("span");text.textContent=label;
+const small=document.createElement("small");
+small.textContent=t(m.type)+" · "+m.x.toFixed(1)+"%, "+m.y.toFixed(1)+"%";
+text.append(small);
+const del=document.createElement("button");del.textContent="×";
+del.setAttribute("aria-label",t("remove")+": "+label);
+del.addEventListener("click",()=>removeMarker(m.id));
+row.append(text,del);$("markerList").append(row);
+});
+$("undo").disabled=!(history[selected]&&history[selected].length);
+$("clear").disabled=!s.markers.length;
+}
+
+$("language").addEventListener("click",()=>{
+lang=lang==="de"?"en":"de";save();render();
+});
+$("mapSelect").addEventListener("change",()=>{
+selected=$("mapSelect").value;zoom=1;$("status").textContent="";render();
+});
+document.querySelectorAll("[data-tool]").forEach(b=>{
+b.addEventListener("click",()=>{tool=b.dataset.tool;render();});
+});
+$("board").addEventListener("click",e=>{
+if(tool==="inspect")return;
+if(!state().image){$("status").textContent=t("emptyImage");return;}
+const rect=$("board").getBoundingClientRect();
+const x=Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100));
+const y=Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100));
+checkpoint();
+if(tool==="player")state().markers=state().markers.filter(m=>m.type!=="player");
+state().markers.push({
+id:Date.now().toString(36)+Math.random().toString(36).slice(2),
+type:tool,x,y,name:$("markerName").value.trim()
+});
+save();render();
+});
+$("zoomIn").addEventListener("click",()=>{zoom=Math.min(3,zoom+.25);render();});
+$("zoomOut").addEventListener("click",()=>{zoom=Math.max(1,zoom-.25);render();});
+$("undo").addEventListener("click",()=>{
+if(history[selected]?.length){
+state().markers=history[selected].pop();save();render();
+}
+});
+$("clear").addEventListener("click",()=>{
+if(state().markers.length&&confirm(t("confirmClear"))){
+checkpoint();state().markers=[];save();render();
+}
+});
+$("imageInput").addEventListener("change",async e=>{
+const file=e.target.files[0];
+e.target.value="";
+if(!file)return;
+if(!["image/png","image/jpeg","image/webp"].includes(file.type)){
+$("status").textContent=t("imageError");return;
+}
+if(file.size>15*1024*1024){
+$("status").textContent=t("largeImage");return;
+}
+const targetMap=selected;
+if(state().markers.length&&!confirm(t("confirmImage")))return;
+const url=URL.createObjectURL(file);
+try{
+const img=new Image();
+await new Promise((resolve,reject)=>{
+img.onload=resolve;img.onerror=reject;img.src=url;
+});
+const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
+const canvas=document.createElement("canvas");
+canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+const ctx=canvas.getContext("2d");
+ctx.fillStyle="#101613";ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+maps[targetMap]={
+image:canvas.toDataURL("image/jpeg",.85),
+ratio:canvas.width/canvas.height,
+markers:[]
+};
+history[targetMap]=[];
+save();render();
+}catch(err){
+$("status").textContent=t("imageError");
+}finally{
+URL.revokeObjectURL(url);
+}
+});
+render();
+</script>
+</body>
+</html>

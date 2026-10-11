@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#151a1d">
+<title>Arsenal · Arena Breakout Companion</title>
+<style>
+:root{
+  color-scheme:dark;
+  --orange:#ff8735;
+  --muted:#bac2c5;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:#0d1113;color:#eee;
+  font-family:system-ui,-apple-system,sans-serif;
+}
+main{max-width:1200px;margin:auto;padding:16px}
+.plate{
+  padding:20px;margin-bottom:16px;
+  border:2px solid #626f76;border-radius:12px;
+  background-image:
+    linear-gradient(120deg,#11181bd9,#11181beb),
+    url("./armor-texture.PNG");
+  background-size:cover;
+  box-shadow:inset 0 1px 2px #ffffff25,0 8px 25px #0006;
+}
+nav{display:flex;gap:18px;flex-wrap:wrap}
+a{color:#ffb278}
+h1{font-size:clamp(28px,6vw,42px);margin:18px 0 8px}
+h2{font-size:18px;overflow-wrap:anywhere;margin:10px 0}
+p{line-height:1.5}
+.muted{color:var(--muted)}
+.kicker{
+  color:var(--orange);letter-spacing:3px;
+  font-size:12px;font-weight:800;
+}
+.controls{
+  display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;
+}
+label{display:block;color:var(--muted);font-size:13px}
+input,select,button{font:inherit;border-radius:8px}
+input,select{
+  width:100%;background:#10171b;color:#eee;
+  padding:12px;border:1px solid #637078;margin-top:6px;
+}
+button{
+  color:#eee;cursor:pointer;border:1px solid #637078;
+  background:linear-gradient(#354149,#1a242a);
+  padding:12px;min-height:44px;
+}
+button:hover{border-color:var(--orange)}
+button[aria-pressed="true"]{
+  color:#ffb278;border-color:var(--orange);background:#35251b;
+}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+.grid{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+}
+.card{padding:15px;display:flex;flex-direction:column}
+.picture{
+  height:150px;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(#ffffff0c,#0007);
+  border:1px solid #ffffff18;border-radius:8px;
+}
+.picture img{width:100%;height:100%;object-fit:contain;padding:12px}
+.picture span{color:var(--muted);font-size:13px}
+.card .favorite{margin-top:auto}
+.tag{font-size:12px;color:#ffb278;margin:8px 0}
+details{margin:12px 0}
+summary{cursor:pointer;color:#ffb278;min-height:30px}
+dl{margin:10px 0;font-size:13px}
+dl div{padding:7px 0;border-bottom:1px solid #ffffff16}
+dt{color:var(--muted)}
+dd{margin:3px 0 0;overflow-wrap:anywhere}
+.notice{
+  padding:12px;border-left:3px solid var(--orange);
+  background:#ff873510;color:var(--muted);font-size:14px;
+}
+.pages{display:flex;gap:14px;align-items:center;justify-content:center;margin:20px 0}
+#status{min-height:25px}
+[hidden]{display:none!important}
+@media(max-width:950px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:680px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .controls{grid-template-columns:1fr}
+  main{padding:10px}
+  .plate{padding:14px}
+}
+@media(max-width:370px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<header class="plate">
+  <nav>
+    <a href="./index.html">← Karten</a>
+    <a href="./waffen.html">Waffen-Builds</a>
+  </nav>
+  <h1>Arsenal</h1>
+  <div class="kicker">BLACK STEEL / WAFFEN & AUFSÄTZE</div>
+  <p class="muted">Waffen und Zubehör durchsuchen, Bilder ansehen und Favoriten speichern.</p>
+</header>
+
+<section class="plate">
+  <div class="controls">
+    <label>Suche
+      <input id="search" type="search"
+             placeholder="M4A1, AK, Scope, Suppressor …">
+    </label>
+    <label>Bereich
+      <select id="kind">
+        <option value="all">Waffen und Aufsätze</option>
+        <option value="weapon">Nur Waffen</option>
+        <option value="mod">Nur Aufsätze</option>
+      </select>
+    </label>
+    <label>Waffentyp
+      <select id="type">
+        <option value="">Alle Waffentypen</option>
+      </select>
+    </label>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+    <button id="favorites" aria-pressed="false">☆ Nur Favoriten</button>
+    <button id="reload">Daten erneut laden</button>
+  </div>
+</section>
+
+<p class="notice">
+  Community-Datenquelle: WilliamFerrant/abi-api.
+  Vollständigkeit und Aktualität für den aktuellen Spielpatch sind nicht bestätigt.
+  Aufsatz-Kompatibilität, Aufsatzwerte und Live-Marktpreise fehlen in dieser Quelle.
+  Ein gefundener Aufsatz ist deshalb nicht automatisch mit einer Waffe kompatibel.
+</p>
+
+<p id="status" role="status" aria-live="polite">Katalog wird geladen …</p>
+<section id="grid" class="grid" aria-label="Arsenal"></section>
+
+<div class="pages">
+  <button id="previous" disabled>← Zurück</button>
+  <span id="page">—</span>
+  <button id="next" disabled>Weiter →</button>
+</div>
+
+<footer class="muted">
+  <p>
+    Daten und Bilder:
+    <a href="https://github.com/WilliamFerrant/abi-api"
+       target="_blank" rel="noopener noreferrer">Community-Datenbank</a>.
+    Favoriten bleiben auf diesem Gerät gespeichert.
+    Daten werden beim Öffnen aus der Quelle geladen.
+  </p>
+</footer>
+</main>
+
+<script>
+"use strict";
+
+const ROOT = "https://raw.githubusercontent.com/WilliamFerrant/abi-api/master/data/";
+const STORAGE = "abi-arsenal-favorites-v1";
+const $ = id => document.getElementById(id);
+const pageSize = 24;
+
+let items = [];
+let page = 1;
+let favoritesOnly = false;
+let loading = false;
+let loadMessages = [];
+let stored = [];
+
+try {
+  const parsed = JSON.parse(localStorage.getItem(STORAGE) || "[]");
+  if (Array.isArray(parsed)) stored = parsed.filter(x => typeof x === "string");
+} catch (_) {}
+
+const favorites = new Set(stored);
+
+const statLabels = {
+  "Type": "Waffentyp",
+  "Caliber": "Kaliber",
+  "Firing Mode": "Feuermodus",
+  "Rate of Fire (RPM)": "Feuerrate / Minute",
+  "Firing Power": "Feuerkraft",
+  "V. Recoil Control": "Vertikale Rückstoßkontrolle",
+  "H. Recoil Control": "Horizontale Rückstoßkontrolle",
+  "Ergonomics": "Ergonomie",
+  "Weapon Stability": "Stabilität",
+  "Accuracy": "Präzision",
+  "Hip-Fire Stability": "Hüftfeuer-Stabilität",
+  "Effective Range": "Effektive Reichweite",
+  "Muzzle Velocity": "Mündungsgeschwindigkeit",
+  "Weight (Kg)": "Gewicht / kg"
+};
+
+function node(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE, JSON.stringify([...favorites]));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function normalize(rows, kind) {
+  if (!Array.isArray(rows)) throw new Error("Ungültiges Datenformat");
+
+  const unique = new Map();
+
+  for (const row of rows) {
+    if (!row || typeof row.name !== "string") continue;
+
+    // Die Quelle enthält teilweise Dateigrößen im Anzeigenamen.
+    const name = row.name.replace(/\s*\(\d+(?:\.\d+)?\s*KB\)\s*$/i, "").trim();
+    if (!name) continue;
+
+    const id = kind + ":" + name.toLowerCase();
+    if (unique.has(id)) continue;
+
+    const imagePath = typeof row.local_image === "string"
+      ? row.local_image
+      : "";
+
+    // Nur Bildpfade innerhalb der bekannten Datenquelle zulassen.
+    const image = /^images\/[\w./-]+\.(png|webp|jpe?g)$/i.test(imagePath)
+      && !imagePath.includes("..")
+      ? ROOT + imagePath
+      : "";
+
+    const stats = row.stats && typeof row.stats === "object"
+      && !Array.isArray(row.stats)
+      ? row.stats
+      : {};
+
+    unique.set(id, { id, name, kind, image, stats });
+  }
+
+  return [...unique.values()];
+}
+
+async function fetchRows(path, kind) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
+
+  try {
+    const response = await fetch(ROOT + path, {
+      signal: controller.signal,
+      cache: "no-cache"
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    return normalize(await response.json(), kind);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function updateTypes() {
+  const previous = $("type").value;
+  $("type").replaceChildren(node("option", "", "Alle Waffentypen"));
+  $("type").firstChild.value = "";
+
+  const types = [...new Set(
+    items.filter(x => x.kind === "weapon")
+      .map(x => x.stats.Type)
+      .filter(x => typeof x === "string")
+  )].sort();
+
+  for (const type of types) {
+    const option = node("option", "", type);
+    option.value = type;
+    $("type").append(option);
+  }
+
+  $("type").value = types.includes(previous) ? previous : "";
+}
+
+function card(item) {
+  const article = node("article", "plate card");
+  const picture = node("div", "picture");
+
+  if (item.image) {
+    const image = node("img");
+    image.src = item.image;
+    image.alt = item.name;
+    image.loading = "lazy";
+    image.decoding = "async";
+    image.addEventListener("error", () => {
+      picture.replaceChildren(node("span", "", "Bild nicht verfügbar"));
+    }, { once: true });
+    picture.append(image);
+  } else {
+    picture.append(node("span", "", "Kein Bild vorhanden"));
+  }
+
+  article.append(picture);
+  article.append(node("div", "tag", item.kind === "weapon" ? "WAFFE" : "AUFSATZ"));
+  article.append(node("h2", "", item.name));
+
+  if (item.kind === "weapon") {
+    const subtitle = [item.stats.Type, item.stats.Caliber]
+      .filter(x => typeof x === "string").join(" · ");
+    article.append(node("div", "muted", subtitle));
+
+    const details = node("details");
+    details.append(node("summary", "", "Waffenwerte ansehen"));
+    const list = node("dl");
+
+    for (const [key, value] of Object.entries(item.stats)) {
+      if (!["string", "number"].includes(typeof value)) continue;
+      const row = node("div");
+      row.append(node("dt", "", statLabels[key] || key));
+      row.append(node("dd", "", String(value)));
+      list.append(row);
+    }
+
+    details.append(list);
+    article.append(details);
+  } else {
+    article.append(node("p", "muted", "Kompatibilität nicht hinterlegt."));
+  }
+
+  const button = node(
+    "button", "favorite",
+    favorites.has(item.id) ? "★ Gespeichert" : "☆ Favorit speichern"
+  );
+  button.type = "button";
+  button.setAttribute("aria-pressed", favorites.has(item.id));
+
+  button.addEventListener("click", () => {
+    if (favorites.has(item.id)) favorites.delete(item.id);
+    else favorites.add(item.id);
+
+    const persisted = save();
+    render();
+
+    if (!persisted) {
+      $("status").textContent +=
+        " Favoriten können momentan nur für diese Sitzung gespeichert werden.";
+    }
+  });
+
+  article.append(button);
+  return article;
+}
+
+function filtered() {
+  const query = $("search").value.trim().toLowerCase();
+  const kind = $("kind").value;
+  const type = $("type").value;
+
+  return items.filter(item => {
+    const text = [
+      item.name,
+      item.stats.Type || "",
+      item.stats.Caliber || ""
+    ].join(" ").toLowerCase();
+
+    return text.includes(query)
+      && (kind === "all" || item.kind === kind)
+      && (!type || (item.kind === "weapon" && item.stats.Type === type))
+      && (!favoritesOnly || favorites.has(item.id));
+  }).sort((a, b) => a.name.localeCompare(b.name, "de"));
+}
+
+function render() {
+  const result = filtered();
+  const pages = Math.max(1, Math.ceil(result.length / pageSize));
+  page = Math.max(1, Math.min(page, pages));
+
+  const shown = result.slice((page - 1) * pageSize, page * pageSize);
+  $("grid").replaceChildren(...shown.map(card));
+
+  if (!shown.length && !loading) {
+    $("grid").append(node("p", "muted", "Keine passenden Einträge gefunden."));
+  }
+
+  const weapons = items.filter(x => x.kind === "weapon").length;
+  const mods = items.filter(x => x.kind === "mod").length;
+
+  $("status").textContent = loading
+    ? "Katalog wird geladen …"
+    : weapons + " Waffen · " + mods + " Aufsätze · "
+      + result.length + " Treffer"
+      + (loadMessages.length ? " · " + loadMessages.join(" · ") : "");
+
+  $("page").textContent = "Seite " + page + " / " + pages;
+  $("previous").disabled = loading || page <= 1;
+  $("next").disabled = loading || page >= pages;
+
+  $("favorites").setAttribute("aria-pressed", favoritesOnly);
+  $("favorites").textContent = favoritesOnly
+    ? "★ Favoriten aktiv"
+    : "☆ Nur Favoriten";
+}
+
+async function load() {
+  if (loading) return;
+  loading = true;
+  $("reload").disabled = true;
+  render();
+
+  const results = await Promise.allSettled([
+    fetchRows("api/weapons/weapons.json", "weapon"),
+    fetchRows("api/weapons/weapon_mods.json", "mod")
+  ]);
+
+  loadMessages = [];
+  const nextItems = [];
+
+  for (let index = 0; index < results.length; index++) {
+    const result = results[index];
+    const kind = index === 0 ? "weapon" : "mod";
+
+    if (result.status === "fulfilled") {
+      nextItems.push(...result.value);
+    } else {
+      // Bei einem fehlgeschlagenen Neuladen vorhandene Daten behalten.
+      nextItems.push(...items.filter(item => item.kind === kind));
+      loadMessages.push(
+        (kind === "weapon" ? "Waffen" : "Aufsätze")
+        + " konnten nicht aktualisiert werden"
+      );
+    }
+  }
+
+  items = nextItems;
+  loading = false;
+  page = 1;
+  updateTypes();
+  $("reload").disabled = false;
+  render();
+}
+
+for (const id of ["search", "kind", "type"]) {
+  $(id).addEventListener(id === "search" ? "input" : "change", () => {
+    page = 1;
+    render();
+  });
+}
+
+$("favorites").addEventListener("click", () => {
+  favoritesOnly = !favoritesOnly;
+  page = 1;
+  render();
+});
+
+$("previous").addEventListener("click", () => {
+  page--;
+  render();
+  $("status").scrollIntoView({ block: "start" });
+});
+
+$("next").addEventListener("click", () => {
+  page++;
+  render();
+  $("status").scrollIntoView({ block: "start" });
+});
+
+$("reload").addEventListener("click", load);
+load();
+</script>
+</body>
+</html>

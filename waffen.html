@@ -857,5 +857,224 @@ setTab("weapon");
 renderBuilds();
 loadCatalog();
 </script>
+<script>
+(async function(){
+"use strict";
+if(window.abiOnlineBuildsLoaded)return;
+window.abiOnlineBuildsLoaded=true;
+
+if(typeof builds==="undefined"||typeof buildCard!=="function"){
+  alert("Bitte zuerst die letzte Version der Waffenwerkbank einsetzen.");
+  return;
+}
+
+const DATA="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";
+
+try{
+  if(typeof DecompressionStream==="undefined"){
+    throw new Error("Dieser Browser kann den Datenblock nicht öffnen.");
+  }
+
+  const bytes=Uint8Array.from(atob(DATA),x=>x.charCodeAt(0));
+  const stream=new Blob([bytes]).stream()
+    .pipeThrough(new DecompressionStream("gzip"));
+  const rows=JSON.parse(await new Response(stream).text());
+
+  if(!Array.isArray(rows)||rows.length!==84){
+    throw new Error("Datenblock unvollständig.");
+  }
+
+  for(const row of rows){
+    if(!Array.isArray(row)||row.length!==7||!Array.isArray(row[6])||
+      !row[6].every(p=>Array.isArray(p)&&p.length===2&&
+        p.every(v=>typeof v==="string"))){
+      throw new Error("Ungültiger Build-Eintrag.");
+    }
+  }
+
+  const originalKey=weaponKey;
+  weaponKey=function(item){
+    const name=item.name;
+    const aliases={
+      "AR-57":"AR57",
+      "AK-102":"AK102",
+      "AK-74N":"AK74N",
+      "AKS-74U":"AKS74U",
+      "AN-94":"AN94",
+      "MAC-10":"MAC10",
+      "AMB-17":"AMB17",
+      "MP-133":"MP133"
+    };
+    const first=name.split(/\s+/)[0];
+
+    if(aliases[first])return aliases[first];
+    if(/^Vector\s*45\b/i.test(name))return "Vector 45";
+    if(/^Vector\s*9\b/i.test(name))return "Vector 9";
+    if(/^MP\s*40\b/i.test(name))return "MP 40";
+    if(/^USAS-?12\b/i.test(name))return "USAS-12";
+    if(/^(CZ\s*807|ZC-?807)\b/i.test(name))return "ZC807";
+    if(/^UZI\b/i.test(name))return "UZI";
+
+    return originalKey(item);
+  };
+
+  for(const build of builds){
+    build.weapon=weaponKey({name:build.weapon});
+  }
+
+  rows.forEach((row,index)=>{
+    const [sourceWeapon,variant,path,code,price,mixed,parts]=row;
+    const weapon=weaponKey({name:sourceWeapon});
+    const id="online-source-"+index;
+
+    if(builds.some(b=>b.id===id))return;
+
+    builds.push({
+      id,
+      name:weapon+" · "+variant+" · Guide",
+      weapon,
+      author:"Ratanak / Zilliongamer",
+      price,
+      code,
+      categories:[variant],
+      season:"Patchstand ungeprüft",
+      updated:"",
+      source:"https://zilliongamer.com/arena-breakout/c/"+path,
+      stats:{},
+      parts,
+      onlineSource:true,
+      mixedSource:mixed
+    });
+
+    validBuildIds.add(id);
+  });
+
+  const pref=readStorage(BUILD_STORAGE,{});
+
+  if(pref&&typeof pref==="object"){
+    if(Array.isArray(pref.favorites)){
+      for(const id of pref.favorites){
+        if(validBuildIds.has(id))buildFavorites.add(id);
+      }
+    }
+
+    if(pref.prices&&typeof pref.prices==="object"){
+      for(const b of builds){
+        const value=pref.prices[b.id];
+        if(Number.isSafeInteger(value)&&value>=0){
+          customPrices[b.id]=value;
+        }
+      }
+    }
+  }
+
+  const originalMoney=money;
+  money=function(value){
+    return Number.isFinite(value)
+      ?originalMoney(value)
+      :"Preis nicht verfügbar";
+  };
+
+  buildPrice=function(build){
+    if(hasOwnPrice(build))return customPrices[build.id];
+    return Number.isFinite(build.price)?build.price:Infinity;
+  };
+
+  const oldCard=buildCard;
+  buildCard=function(build){
+    const card=oldCard(build);
+
+    for(const details of card.querySelectorAll("details")){
+      const summary=details.querySelector("summary");
+
+      if(summary&&summary.textContent.startsWith("Teileliste")){
+        details.open=build.parts.length>0;
+
+        if(build.onlineSource){
+          summary.textContent=
+            "Aufsätze laut Guide · "+build.parts.length+" Einträge";
+
+          const help=details.querySelector("p");
+          if(help){
+            help.textContent=
+              "Quellenbezeichnungen und Abkürzungen. "+
+              "Die Liste wurde nicht im Spiel geprüft. "+
+              "Frei wählbare Visiere sind keine konkreten Aufsätze.";
+          }
+        }
+      }
+    }
+
+    if(build.onlineSource){
+      const message=!build.code
+        ?"Infinite-Zuordnung nicht belegt: Diese Teileliste stammt "+
+          "aus einem allgemeinen Arena-Breakout-Guide. "+
+          "Kein Infinite-Importcode vorhanden."
+        :build.mixedSource
+          ?"Quelle vermischt Mobile und Infinite. "+
+            "Der Code ist dort für Infinite angegeben; "+
+            "die Zuordnung der Teileliste ist ungeprüft."
+          :"Infinite-Guide mit Teileliste. "+
+            "Importcode und Kombination wurden nicht im Spiel getestet.";
+
+      card.querySelector("h2").after(node("p","notice",message));
+
+      const price=card.querySelector(".price");
+      if(price&&price.nextElementSibling){
+        price.nextElementSibling.textContent=hasOwnPrice(build)
+          ?"Eigene Preisangabe"
+          :Number.isFinite(build.price)
+            ?"Quellen-Schätzwert · kein aktueller Marktpreis"
+            :"Kein verlässlicher Infinite-Preis hinterlegt";
+      }
+
+      if(!build.code){
+        const code=card.querySelector(".code");
+        if(code)code.textContent="Kein Infinite-Importcode hinterlegt.";
+
+        for(const b of card.querySelectorAll("button")){
+          if(b.textContent==="Build-Code kopieren"){
+            b.disabled=true;
+            b.textContent="Kein Importcode";
+          }
+        }
+      }
+    }
+
+    return card;
+  };
+
+  for(const value of ["Premium","Quellen-Build"]){
+    if(!Array.from($("buildCategory").options)
+      .some(o=>o.value===value)){
+      const option=node("option","",value);
+      option.value=value;
+      $("buildCategory").append(option);
+    }
+  }
+
+  if(!document.getElementById("onlineBuildInfo")){
+    const info=node("p","notice",
+      "84 zusätzliche Quellen-Vorlagen mit Teilelisten. "+
+      "Gemischte Mobile/Infinite-Guides und Vorlagen ohne "+
+      "Infinite-Code sind ausdrücklich gekennzeichnet. "+
+      "Stand der Sammlung: 11.10.2026. "+
+      "Nicht alle Waffen sind abgedeckt.");
+
+    info.id="onlineBuildInfo";
+    $("buildSection").prepend(info);
+  }
+
+  updateBuildWeapons();
+  renderCatalog();
+  renderBuilds();
+
+}catch(error){
+  window.abiOnlineBuildsLoaded=false;
+  console.error("Build-Erweiterung:",error);
+  notify("Build-Erweiterung konnte nicht geladen werden: "+error.message);
+}
+})();
+</script>
 </body>
 </html>

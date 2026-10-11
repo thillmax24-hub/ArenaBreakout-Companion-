@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#171b1d">
+<title>Waffenwerkbank · Arena Breakout Companion</title>
+
+<style>
+:root{
+  color-scheme:dark;
+  --orange:#ff8735;
+  --text:#f0ede6;
+  --muted:#bcc3c5;
+  --border:#667178;
+  --armor:url("./armor-texture.PNG");
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#0d1113;
+  color:var(--text);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+header,main{max-width:1150px;margin:auto}
+header{padding:20px 16px 0}
+main{padding:18px 16px 40px}
+.plate{
+  border:2px solid var(--border);
+  border-radius:14px;
+  background-image:
+    linear-gradient(110deg,rgba(15,20,23,.76),rgba(15,20,23,.86)),
+    var(--armor);
+  background-size:cover;
+  background-position:center;
+  box-shadow:inset 0 1px 2px #ffffff25,0 8px 22px #0007;
+}
+.heading{padding:24px;position:relative;overflow:hidden}
+.heading:after{
+  content:"";position:absolute;bottom:0;left:15%;right:15%;
+  height:3px;background:var(--orange);
+  box-shadow:0 0 20px var(--orange);
+}
+h1{margin:12px 0 8px;font-size:clamp(25px,5vw,40px)}
+h2{margin:0 0 12px}
+h3{margin:8px 0;font-size:22px}
+p{line-height:1.5}
+.kicker{
+  color:var(--orange);
+  letter-spacing:3px;font-size:12px;font-weight:800;
+}
+.muted{color:var(--muted)}
+a{color:#ffac70}
+.back{display:inline-block;margin-bottom:6px;text-decoration:none}
+.toolbar{
+  padding:18px;display:grid;
+  grid-template-columns:2fr 1fr 1fr;gap:12px;
+}
+label{display:block;font-size:13px;color:var(--muted)}
+input,select,button{
+  font:inherit;border:1px solid #667178;border-radius:8px;
+}
+input,select{
+  width:100%;padding:12px;margin-top:6px;
+  background:#11181c;color:var(--text);min-height:46px;
+}
+button{
+  padding:12px;background:linear-gradient(#354047,#1c252b);
+  color:var(--text);cursor:pointer;min-height:44px;
+}
+button:hover{border-color:var(--orange)}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
+  outline:3px solid var(--orange);outline-offset:3px;
+}
+.primary{
+  background:linear-gradient(#ffa15b,#db6217);
+  color:#18130e;font-weight:800;border-color:#ffc394;
+}
+button[aria-pressed="true"]{
+  border-color:var(--orange);color:#ffb581;background:#35261d;
+}
+.notice{
+  border-left:3px solid var(--orange);
+  padding:12px 15px;background:#ff873510;
+  color:var(--muted);font-size:14px;
+}
+.grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;margin-top:18px;
+}
+.card{padding:20px}
+.weapon{
+  font-size:36px;font-weight:900;letter-spacing:2px;
+  padding:25px 12px;margin-bottom:15px;text-align:center;
+  color:#dedbd3;border:1px solid #ffffff20;border-radius:8px;
+  background:linear-gradient(145deg,#ffffff0c,#0009);
+  text-shadow:0 3px 4px #000;
+}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{
+  font-size:11px;font-weight:700;border:1px solid #a46b43;
+  background:#ff873512;padding:5px 8px;border-radius:5px;
+}
+.price{font-size:27px;font-weight:850;margin:18px 0 2px}
+.price-label{font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 0}
+.stat{background:#0005;padding:10px;border-radius:6px}
+.stat span{display:block;color:var(--muted);font-size:12px}
+.stat strong{font-size:19px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.code{
+  display:block;overflow-wrap:anywhere;margin:12px 0;
+  font-size:12px;background:#0006;padding:10px;border-radius:6px;
+}
+details{margin-top:16px}
+summary{cursor:pointer;color:#ffb581;min-height:32px}
+.edit{display:grid;gap:8px;margin-top:10px}
+.compare{margin-top:22px;padding:20px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:440px}
+th,td{
+  text-align:left;padding:13px;border-bottom:1px solid #ffffff20;
+}
+th{color:#ffb581}
+.empty{grid-column:1/-1;padding:25px;text-align:center}
+footer{margin-top:24px;color:var(--muted);font-size:13px}
+#toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  padding:12px 18px;border:1px solid var(--orange);
+  background:#161c20;border-radius:9px;z-index:10;
+  max-width:calc(100% - 30px);box-shadow:0 5px 25px #0009;
+}
+[hidden]{display:none!important}
+@media(max-width:850px){.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:580px){
+  .grid,.toolbar{grid-template-columns:1fr}
+  .heading{padding:20px}
+  header{padding:12px 10px 0}
+  main{padding:14px 10px 30px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="plate heading">
+    <a class="back" href="./index.html">← Zur interaktiven Karte</a>
+    <div class="kicker">BLACK STEEL / WAFFENWERKBANK</div>
+    <h1>Arena Breakout</h1>
+    <p class="muted">Builds entdecken, vergleichen und für deinen nächsten Raid speichern.</p>
+  </div>
+</header>
+
+<main>
+  <section class="plate toolbar" aria-label="Builds filtern">
+    <label>Waffe oder Build suchen
+      <input id="search" type="search" placeholder="M4A1, AK12, Budget …">
+    </label>
+    <label>Maximales Budget in Koen
+      <input id="budget" type="number" min="0" step="10000"
+             placeholder="Unbegrenzt">
+    </label>
+    <label>Sortierung
+      <select id="sort">
+        <option value="price">Preis: günstig zuerst</option>
+        <option value="vertical">Vertikale Rückstoßkontrolle</option>
+        <option value="ergo">Ergonomie</option>
+        <option value="name">Name</option>
+      </select>
+    </label>
+    <button id="favorites" type="button" aria-pressed="false">
+      ☆ Nur Favoriten
+    </button>
+  </section>
+
+  <p class="notice">
+    Preise sind veröffentlichte Community-Angaben für komplette Builds.
+    Der Zeitpunkt der jeweiligen Preisermittlung ist unbekannt.
+    Sie werden hier nicht automatisch mit dem Spielmarkt abgeglichen.
+    Quelle geprüft: 11.10.2026.
+  </p>
+
+  <p id="count" class="muted" aria-live="polite"></p>
+  <section id="cards" class="grid" aria-label="Waffen-Builds"></section>
+
+  <section id="comparison" class="plate compare" hidden>
+    <h2>Build-Vergleich</h2>
+    <p class="muted">
+      Angezeigte Rückstoßwerte sind Kontrollwerte des Builds.
+      Höhere Werte bedeuten hier mehr Rückstoßkontrolle.
+    </p>
+    <div class="table-wrap">
+      <table id="compareTable"></table>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      Quelle:
+      <a href="https://abibuilder.com/builds"
+         target="_blank" rel="noopener noreferrer">ABI Builder</a>.
+      Community-Builds sind keine vollständige Waffen-Rangliste.
+      Favoriten und eigene Preisangaben werden auf diesem Gerät gespeichert.
+    </p>
+    <p>
+      Diese erste Werkbank enthält fertige Builds.
+      Ein Konfigurator für einzelne kompatible Aufsätze wird später ergänzt.
+    </p>
+  </footer>
+</main>
+
+<div id="toast" role="status" hidden></div>
+
+<script>
+"use strict";
+
+const builds = [
+  {
+    id: "m4-budget",
+    name: "M4 Budget",
+    weapon: "M4A1",
+    author: "chureba",
+    price: 160000,
+    code: "Armas Modificadas-3fFj3hAqjqsoxP4I4",
+    tags: ["Budget", "Streamer Build"],
+    stats: {
+      vertical: 80, horizontal: 70, ergo: 48,
+      stability: 63, accuracy: 41, hip: 76,
+      range: 49, velocity: 900
+    }
+  },
+  {
+    id: "ak12-budget",
+    name: "AK12 Budget Season 7",
+    weapon: "AK12",
+    author: "chureba",
+    price: 224000,
+    code: "Armas Modificadas-3fFj3hAqjqsoxP4rP",
+    tags: ["Budget", "Streamer Build"],
+    stats: {
+      vertical: 79, horizontal: 66, ergo: 49,
+      stability: 52, accuracy: 41, hip: 75,
+      range: 55, velocity: 880
+    }
+  },
+  {
+    id: "m4-allround",
+    name: "M4A1 All-Rounder",
+    weapon: "M4A1",
+    author: "reolity",
+    price: 330000,
+    code: "Mod Gun-3fQnDljWViWozP4yP",
+    tags: ["Meta · Quellenlabel", "Hip Fire", "Zero Recoil · Quellenlabel"],
+    stats: {
+      vertical: 89, horizontal: 79, ergo: 56,
+      stability: 58, accuracy: 42, hip: 76,
+      range: 54, velocity: 900
+    }
+  }
+];
+
+const labels = {
+  vertical: "Vertikale Kontrolle",
+  horizontal: "Horizontale Kontrolle",
+  ergo: "Ergonomie",
+  stability: "Stabilität",
+  accuracy: "Präzision",
+  hip: "Hüftfeuer",
+  range: "Reichweite",
+  velocity: "Mündungsgeschwindigkeit"
+};
+
+const storageKey = "abi-weapon-workbench-v1";
+const $ = id => document.getElementById(id);
+const validIds = new Set(builds.map(build => build.id));
+
+let saved = {};
+try {
+  saved = JSON.parse(localStorage.getItem(storageKey) || "{}") || {};
+} catch (_) {}
+
+const favorites = new Set(
+  Array.isArray(saved.favorites)
+    ? saved.favorites.filter(id => validIds.has(id))
+    : []
+);
+
+const customPrices = {};
+if (saved.prices && typeof saved.prices === "object") {
+  for (const build of builds) {
+    const value = saved.prices[build.id];
+    if (Number.isSafeInteger(value) && value >= 0) {
+      customPrices[build.id] = value;
+    }
+  }
+}
+
+const selected = new Set();
+let favoritesOnly = false;
+let toastTimer;
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function notify(message) {
+  $("toast").textContent = message;
+  $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    $("toast").hidden = true;
+  }, 3200);
+}
+
+function persist() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({
+      favorites: [...favorites],
+      prices: customPrices
+    }));
+  } catch (_) {
+    notify("Speichern auf diesem Gerät ist nicht verfügbar.");
+  }
+}
+
+function price(build) {
+  return Object.hasOwn(customPrices, build.id)
+    ? customPrices[build.id]
+    : build.price;
+}
+
+function money(value) {
+  return new Intl.NumberFormat("de-DE").format(value) + " Koen";
+}
+
+function button(text, action, className) {
+  const node = element("button", className, text);
+  node.type = "button";
+  node.addEventListener("click", action);
+  return node;
+}
+
+function renderCard(build) {
+  const card = element("article", "plate card");
+
+  card.append(element("div", "weapon", build.weapon));
+  card.append(element("h3", "", build.name));
+  card.append(element("div", "muted", "Build von " + build.author));
+
+  const badges = element("div", "badges");
+  for (const tag of build.tags) {
+    badges.append(element("span", "badge", tag));
+  }
+  card.append(badges);
+
+  card.append(element("div", "price", money(price(build))));
+  card.append(element(
+    "div",
+    "price-label",
+    Object.hasOwn(customPrices, build.id)
+      ? "Eigene Preisangabe"
+      : "Community-Preis · Zeitpunkt unbekannt"
+  ));
+
+  const stats = element("div", "stats");
+  for (const key of ["vertical", "horizontal", "ergo", "hip"]) {
+    const cell = element("div", "stat");
+    cell.append(element("span", "", labels[key]));
+    cell.append(element("strong", "", String(build.stats[key])));
+    stats.append(cell);
+  }
+  card.append(stats);
+
+  const actions = element("div", "actions");
+
+  const favoriteButton = button(
+    favorites.has(build.id) ? "★ Gespeichert" : "☆ Speichern",
+    () => {
+      if (favorites.has(build.id)) favorites.delete(build.id);
+      else favorites.add(build.id);
+      persist();
+      render();
+    }
+  );
+  favoriteButton.setAttribute("aria-pressed", favorites.has(build.id));
+  actions.append(favoriteButton);
+
+  const compareButton = button(
+    selected.has(build.id) ? "✓ Im Vergleich" : "⇄ Vergleichen",
+    () => {
+      if (selected.has(build.id)) selected.delete(build.id);
+      else {
+        if (selected.size >= 2) {
+          notify("Bitte zuerst einen Build aus dem Vergleich entfernen.");
+          return;
+        }
+        selected.add(build.id);
+      }
+      render();
+    }
+  );
+  compareButton.setAttribute("aria-pressed", selected.has(build.id));
+  actions.append(compareButton);
+  card.append(actions);
+
+  const code = element("code", "code", build.code);
+  card.append(code);
+
+  card.append(button("Build-Code kopieren", async () => {
+    try {
+      await navigator.clipboard.writeText(build.code);
+      notify("Build-Code kopiert.");
+    } catch (_) {
+      const range = document.createRange();
+      range.selectNodeContents(code);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      notify("Code markiert. Bitte über das Auswahlmenü kopieren.");
+    }
+  }, "primary"));
+
+  const details = element("details");
+  details.append(element("summary", "", "Eigenen beobachteten Preis eintragen"));
+
+  const edit = element("div", "edit");
+  const label = element("label", "", "Preis für den kompletten Build in Koen");
+  const input = element("input");
+  input.type = "number";
+  input.min = "0";
+  input.step = "1";
+  input.placeholder = String(build.price);
+  input.value = Object.hasOwn(customPrices, build.id)
+    ? String(customPrices[build.id])
+    : "";
+  label.append(input);
+  edit.append(label);
+
+  edit.append(button("Eigenen Preis speichern", () => {
+    const raw = input.value.trim();
+    const value = Number(raw);
+    if (!raw || !Number.isSafeInteger(value) || value < 0) {
+      notify("Bitte einen gültigen Preis in ganzen Koen eintragen.");
+      return;
+    }
+    customPrices[build.id] = value;
+    persist();
+    render();
+    notify("Eigene Preisangabe gespeichert.");
+  }));
+
+  edit.append(button("Community-Preis verwenden", () => {
+    delete customPrices[build.id];
+    persist();
+    render();
+  }));
+
+  details.append(edit);
+  card.append(details);
+
+  return card;
+}
+
+function renderComparison() {
+  const chosen = builds.filter(build => selected.has(build.id));
+  $("comparison").hidden = chosen.length === 0;
+
+  const table = $("compareTable");
+  table.replaceChildren();
+
+  if (!chosen.length) return;
+
+  const head = element("thead");
+  const header = element("tr");
+  header.append(element("th", "", "Eigenschaft"));
+  for (const build of chosen) {
+    header.append(element("th", "", build.name));
+  }
+  head.append(header);
+  table.append(head);
+
+  const body = element("tbody");
+  const rows = [
+    ["Preis", build => money(price(build))],
+    ["Preisquelle", build => Object.hasOwn(customPrices, build.id)
+      ? "Eigene Angabe" : "Community"],
+    ...Object.entries(labels).map(([key, label]) => [
+      label,
+      build => String(build.stats[key])
+    ])
+  ];
+
+  for (const [label, getValue] of rows) {
+    const row = element("tr");
+    const heading = element("th", "", label);
+    heading.scope = "row";
+    row.append(heading);
+    for (const build of chosen) {
+      row.append(element("td", "", getValue(build)));
+    }
+    body.append(row);
+  }
+
+  table.append(body);
+}
+
+function render() {
+  const query = $("search").value.trim().toLocaleLowerCase("de");
+  const budgetText = $("budget").value.trim();
+  const budget = budgetText === "" ? Infinity : Number(budgetText);
+  const sort = $("sort").value;
+
+  const visible = builds.filter(build => {
+    const haystack = [
+      build.name, build.weapon, build.author, ...build.tags
+    ].join(" ").toLocaleLowerCase("de");
+
+    return haystack.includes(query)
+      && price(build) <= budget
+      && (!favoritesOnly || favorites.has(build.id));
+  });
+
+  visible.sort((a, b) => {
+    if (sort === "name") return a.name.localeCompare(b.name, "de");
+    if (sort === "vertical") return b.stats.vertical - a.stats.vertical;
+    if (sort === "ergo") return b.stats.ergo - a.stats.ergo;
+    return price(a) - price(b);
+  });
+
+  $("cards").replaceChildren(...visible.map(renderCard));
+
+  if (!visible.length) {
+    $("cards").append(element(
+      "p", "plate empty",
+      "Keine passenden Builds. Suche oder Budgetfilter anpassen."
+    ));
+  }
+
+  $("count").textContent = visible.length + " von " + builds.length + " Builds";
+  $("favorites").setAttribute("aria-pressed", favoritesOnly);
+  $("favorites").textContent = favoritesOnly
+    ? "★ Favoriten aktiv"
+    : "☆ Nur Favoriten";
+
+  renderComparison();
+}
+
+$("search").addEventListener("input", render);
+$("budget").addEventListener("input", render);
+$("sort").addEventListener("change", render);
+$("favorites").addEventListener("click", () => {
+  favoritesOnly = !favoritesOnly;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

@@ -2075,4 +2075,363 @@ drawCommunity();
 </script>
 
 </body>
+<script>
+(function(){
+"use strict";
+
+if(window.abiMapPicker)return;
+
+const get=id=>document.getElementById(id);
+const panel=get("rpPanel");
+const spawn=get("rpSpawn");
+const exit=get("rpExit");
+
+if(!panel||!spawn||!exit)return;
+window.abiMapPicker=true;
+
+let choiceLayer=null;
+let removed=[];
+let picking=false;
+let waiting=false;
+
+const card=document.createElement("section");
+card.style.cssText=
+  "margin:16px 0;padding:16px;border:1px solid #ff963f;"+
+  "border-radius:6px;background:#11191d";
+
+card.innerHTML=`
+<h3 style="margin-top:0;color:#ffad6c">START & ZIEL</h3>
+
+<div id="abiPickFields" class="rpGrid"></div>
+
+<div class="rpActions">
+  <button id="abiPickSpawn" class="rpOrange" type="button">
+    ① Spawn wählen
+  </button>
+  <button id="abiPickExit" class="rpOrange" type="button">
+    ② Exit wählen
+  </button>
+  <button id="abiPickCalculate" type="button">
+    ③ Route berechnen
+  </button>
+</div>
+
+<p id="abiPickSelected" class="rpMuted"></p>
+
+<p class="rpMuted">
+  Auf der Karte erscheinen nur die passenden vorhandenen Marker.
+  Antippen genügt. Die Route bleibt eine Luftlinienplanung.
+</p>
+`;
+
+panel.querySelector("h2").after(card);
+
+for(const id of ["rpMap","rpGoal"]){
+  const label=get(id)?.closest("label");
+  if(label)get("abiPickFields").append(label);
+}
+
+const status=document.createElement("div");
+status.id="abiPickBar";
+status.hidden=true;
+status.style.cssText=
+  "position:fixed;bottom:18px;left:12px;right:12px;"+
+  "z-index:2200;max-width:700px;margin:auto;"+
+  "background:#111b20;border:2px solid #ff963f;"+
+  "border-radius:8px;padding:12px;color:white;"+
+  "display:flex;gap:12px;align-items:center;"+
+  "justify-content:space-between";
+
+status.innerHTML=`
+<span id="abiPickMessage"></span>
+<button id="abiPickCancel" type="button">Abbrechen</button>
+`;
+
+document.body.append(status);
+
+const css=document.createElement("style");
+css.textContent=`
+#abiPickBar[hidden]{
+  display:none!important;
+}
+.abi-picker-on #map .leaflet-overlay-pane svg{
+  visibility:hidden;
+}
+.abi-picker-on .rpPoint{
+  visibility:hidden;
+}
+.abi-choice-point{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:2px solid white;
+  display:grid;
+  place-items:center;
+  font:bold 12px system-ui;
+  color:#111;
+  box-shadow:0 2px 8px #000;
+  cursor:pointer;
+}
+.abi-choice-spawn{
+  background:#9ded72;
+}
+.abi-choice-exit{
+  background:#70d0ff;
+}
+`;
+
+document.head.append(css);
+
+const selectedText=select=>select.value
+  ?select.options[select.selectedIndex]?.textContent||"Gewählt"
+  :"Noch nicht gewählt";
+
+function update(){
+  get("abiPickSelected").textContent=
+    "Spawn: "+selectedText(spawn)+
+    " · Exit: "+selectedText(exit);
+
+  get("abiPickCalculate").disabled=
+    !spawn.value||!exit.value||picking||waiting;
+}
+
+function finish(showPanel=true){
+  picking=false;
+  status.hidden=true;
+
+  if(choiceLayer){
+    choiceLayer.clearLayers();
+    leafletMap?.removeLayer(choiceLayer);
+    choiceLayer=null;
+  }
+
+  for(const layer of removed){
+    if(leafletMap&&!leafletMap.hasLayer(layer)){
+      layer.addTo(leafletMap);
+    }
+  }
+
+  removed=[];
+  document.body.classList.remove("abi-picker-on");
+  update();
+
+  if(showPanel){
+    panel.hidden=false;
+    card.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+  }
+}
+
+function message(text){
+  get("rpStatus").textContent=text;
+}
+
+async function choose(kind){
+  if(waiting)return;
+
+  if(!leafletMap||typeof L==="undefined"){
+    message("Karte noch nicht verfügbar.");
+    return;
+  }
+
+  finish(false);
+  waiting=true;
+  update();
+
+  const target=get("rpMap").value;
+
+  if(selected!==target){
+    get("mapSelect").value=target;
+    get("mapSelect").dispatchEvent(
+      new Event("change",{bubbles:true})
+    );
+  }
+
+  for(let i=0;loading&&i<150;i++){
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
+
+  waiting=false;
+
+  if(
+    loading||selected!==target||
+    !currentData||!bounds||!imageLayer||state().image
+  ){
+    update();
+    message("Bitte eine Community-Karte vollständig laden.");
+    return;
+  }
+
+  drawCommunity();
+
+  const cats=new Map(
+    currentData.categories.map(c=>[String(c.id),c.name])
+  );
+
+  const list=currentData.markers.filter(m=>{
+    const name=cats.get(String(m.categoryId))||"";
+
+    return (
+      kind==="spawn"
+        ?/^player.*spawn/i.test(name)
+        :name==="Extraction Point"
+    )&&
+      Array.isArray(m.position)&&
+      m.position.length===2&&
+      m.position.every(Number.isFinite)&&
+      bounds.contains(L.latLng(m.position[1],m.position[0]));
+  });
+
+  if(!list.length){
+    update();
+    message(
+      "Für diese Karte sind keine passenden "+
+      (kind==="spawn"?"Spawns":"Ausgänge")+
+      " hinterlegt."
+    );
+    return;
+  }
+
+  get("rpClose").click();
+  closeDrawer();
+  picking=true;
+  document.body.classList.add("abi-picker-on");
+
+  for(const layer of [communityLayer,ownLayer]){
+    if(layer&&leafletMap.hasLayer(layer)){
+      removed.push(layer);
+      leafletMap.removeLayer(layer);
+    }
+  }
+
+  choiceLayer=L.layerGroup().addTo(leafletMap);
+
+  list.forEach((data,index)=>{
+    const id=String(data.categoryId)+":"+
+      data.position.join(",");
+
+    const title=String(
+      data.popup?.title||
+      (kind==="spawn"?"Spawn":"Exit")+" "+(index+1)
+    );
+
+    const icon=L.divIcon({
+      className:"",
+      html:
+        '<div class="abi-choice-point abi-choice-'+
+        kind+'">'+(index+1)+'</div>',
+      iconSize:[36,36],
+      iconAnchor:[18,18]
+    });
+
+    L.marker(
+      [data.position[1],data.position[0]],
+      {
+        icon,
+        title,
+        bubblingMouseEvents:false,
+        zIndexOffset:4000
+      }
+    ).addTo(choiceLayer).on("click",()=>{
+      const select=kind==="spawn"?spawn:exit;
+
+      if(!Array.from(select.options).some(o=>o.value===id)){
+        finish();
+        message(
+          "Markerliste geändert. Bitte die Auswahl erneut öffnen."
+        );
+        return;
+      }
+
+      select.value=id;
+      select.dispatchEvent(
+        new Event("change",{bubbles:true})
+      );
+
+      finish();
+
+      message(
+        (kind==="spawn"?"Spawn":"Exit")+" gewählt: "+
+        title+". "+
+        (kind==="spawn"
+          ?"Jetzt Exit wählen oder Route berechnen."
+          :"Jetzt Route berechnen. Ausgangsbedingungen im Spiel prüfen.")
+      );
+    });
+  });
+
+  get("abiPickMessage").textContent=
+    list.length+" "+
+    (kind==="spawn"?"Spawns":"Ausgänge")+
+    " · Deinen "+
+    (kind==="spawn"?"Spawn":"Exit")+
+    " antippen";
+
+  status.hidden=false;
+  update();
+
+  leafletMap.invalidateSize({pan:false});
+  leafletMap.fitBounds(bounds,{
+    padding:[20,50],
+    animate:false
+  });
+
+  get("map").scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+get("abiPickSpawn").addEventListener("click",()=>{
+  choose("spawn");
+});
+
+get("abiPickExit").addEventListener("click",()=>{
+  choose("exit");
+});
+
+get("abiPickCancel").addEventListener("click",()=>{
+  finish();
+});
+
+get("abiPickCalculate").addEventListener("click",()=>{
+  if(!spawn.value||!exit.value){
+    message("Bitte zuerst Spawn und Exit auswählen.");
+    return;
+  }
+
+  get("rpFromSpawn").click();
+
+  if(get("rpStatus").textContent.startsWith("Route berechnet:")){
+    panel.hidden=true;
+    get("map").scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+  }
+});
+
+get("rpEditRoute").hidden=true;
+get("rpFromSpawn").hidden=true;
+
+spawn.addEventListener("change",update);
+exit.addEventListener("change",update);
+
+get("mapSelect").addEventListener("change",()=>{
+  if(picking)finish(false);
+});
+
+const observer=new MutationObserver(update);
+observer.observe(spawn,{childList:true});
+observer.observe(exit,{childList:true});
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&picking)finish();
+});
+
+update();
+})();
+</script>
 </html>

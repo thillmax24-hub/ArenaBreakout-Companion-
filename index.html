@@ -305,12 +305,23 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
 </head>
 <body>
 
-<header>
+<header style="flex-wrap:wrap">
   <div class="brand">
     ARENA BREAKOUT
     <small>BLACK STEEL / ARMORED EDITION</small>
   </div>
-  <button id="language" type="button">EN</button>
+
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <a href="./waffen.html"
+       class="orange"
+       style="display:inline-flex;align-items:center;justify-content:center;
+              min-height:44px;padding:11px 16px;border:1px solid #ffc28c;
+              border-radius:4px;text-decoration:none">
+      Waffenwerkbank
+    </a>
+
+    <button id="language" type="button">EN</button>
+  </div>
 </header>
 
 <button class="backdrop" id="backdrop" type="button"

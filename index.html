@@ -1280,5 +1280,149 @@ if(typeof L==="undefined"){
   }
 })();
 </script>
+<script>
+(() => {
+  "use strict";
+
+  let keySearchEnabled = false;
+
+  const candidates = new Set([
+    "Jacket",
+    "Filing Cabinet",
+    "Suitcase"
+  ]);
+
+  const box = document.createElement("div");
+  box.style.cssText = `
+    margin-top:14px;
+    padding:12px;
+    border:1px solid #655a31;
+    border-radius:10px;
+    background:#292619;
+  `;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.style.width = "100%";
+
+  const explanation = document.createElement("p");
+  explanation.className = "help";
+  explanation.style.marginBottom = "0";
+
+  const source = document.createElement("a");
+  source.href =
+    "https://www.reddit.com/r/ArenaBreakoutInfinite/comments/1d6znjl/";
+  source.target = "_blank";
+  source.rel = "noopener noreferrer";
+  source.style.cssText = "color:#ffd369;font-size:11px;";
+
+  box.append(button, explanation, source);
+  $("categories").before(box);
+
+  function updateKeySearchUI() {
+    const de = lang === "de";
+
+    button.textContent = de
+      ? keySearchEnabled
+        ? "🔑 Schlüssel-Suche: AN"
+        : "🔑 Schlüssel-Suche einschalten"
+      : keySearchEnabled
+        ? "🔑 Key search: ON"
+        : "🔑 Enable key search";
+
+    button.classList.toggle("active", keySearchEnabled);
+    button.setAttribute(
+      "aria-pressed",
+      String(keySearchEnabled)
+    );
+
+    explanation.textContent = de
+      ? "Zeigt Jacken, Aktenschränke und Koffer als mögliche Schlüssel-Fundorte. Zufälliges Loot, keine garantierten Schlüssel und keine bestätigten festen Spawns."
+      : "Shows jackets, filing cabinets and suitcases as possible key loot locations. Random loot, no guaranteed keys and no confirmed fixed spawns.";
+
+    source.textContent = de
+      ? "Quelle: Community-Spielerberichte"
+      : "Source: community player reports";
+  }
+
+  const previousAppearance = appearance;
+
+  appearance = function(name) {
+    if (keySearchEnabled && candidates.has(name)) {
+      return ["Keysico.png", "#ffd369"];
+    }
+
+    return previousAppearance(name);
+  };
+
+  const previousDrawCommunity = drawCommunity;
+
+  drawCommunity = function() {
+    updateKeySearchUI();
+
+    if (!keySearchEnabled || !currentData) {
+      previousDrawCommunity();
+      return;
+    }
+
+    const originalData = currentData;
+
+    const eligibleIds = new Set(
+      originalData.categories
+        .filter(category => candidates.has(category.name))
+        .map(category => String(category.id))
+    );
+
+    const hint = lang === "de"
+      ? "Möglicher Schlüssel-Fundort: zufälliger Loot-Behälter. Kein garantierter Schlüssel. Grundlage: Community-Berichte, keine verifizierte Drop-Tabelle."
+      : "Possible key loot location: random loot container. No guaranteed key. Based on community reports, not a verified drop table.";
+
+    const temporaryData = {
+      ...originalData,
+      markers: originalData.markers
+        .filter(marker =>
+          eligibleIds.has(String(marker.categoryId))
+        )
+        .map(marker => ({
+          ...marker,
+          popup: {
+            ...(marker.popup || {}),
+            description:
+              hint +
+              (
+                marker.popup?.description
+                  ? "\n\n" + marker.popup.description
+                  : ""
+              )
+          }
+        }))
+    };
+
+    // Keep the original dataset unchanged.
+    try {
+      currentData = temporaryData;
+      previousDrawCommunity();
+    } finally {
+      currentData = originalData;
+    }
+  };
+
+  button.addEventListener("click", () => {
+    keySearchEnabled = !keySearchEnabled;
+
+    if (keySearchEnabled) {
+      candidates.forEach(name => hidden.delete(name));
+      $("search").value = "";
+      savePrefs();
+    }
+
+    buildFilters();
+    drawCommunity();
+  });
+
+  updateKeySearchUI();
+  drawCommunity();
+})();
+</script>
 </body>
 </html>

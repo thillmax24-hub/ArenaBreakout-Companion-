@@ -603,5 +603,485 @@ render();
   ensureMap();
 })();
 </script>
+<script>
+(() => {
+  "use strict";
+
+  const root =
+    "https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/";
+
+  const files = {
+    farm: "farm",
+    valley: "valley",
+    armory: "armory",
+    tv: "tv-station"
+  };
+
+  const datasets = new Map();
+  const loading = new Set();
+  const errors = new Set();
+  const hiddenCategories = new Set();
+  let search = "";
+
+  const german = {
+    "Player Spawn": "Spieler-Spawn",
+    "Player spawn (Lockdown)": "Spieler-Spawn (Lockdown)",
+    "Extraction Point": "Ausgänge",
+    "Key Rooms": "Schlüsseltüren",
+    "Safe": "Safes",
+    "Air Drop": "Airdrops",
+    "SCAV SNIPER": "Scav-Scharfschützen",
+    "Scav Sniper": "Scav-Scharfschützen",
+    "Military Supply Case": "Militär-Versorgungskisten",
+    "Military Supply Crate": "Militär-Versorgungskisten",
+    "Weapon Box": "Waffenkisten",
+    "Weapons": "Waffen",
+    "Document Case": "Dokumentenkoffer",
+    "Filing Cabinet": "Aktenschränke",
+    "Storage Case": "Lagerkisten",
+    "Computer": "Computer",
+    "Toolbox": "Werkzeugkisten",
+    "Ammo Box": "Munitionskisten",
+    "Grenade Box": "Granatenkisten",
+    "Duffle Bag": "Sporttaschen",
+    "Jacket": "Jacken",
+    "Suitcase": "Koffer",
+    "Medical": "Medizin",
+    "Cash Register": "Kassen",
+    "Extraction Lever": "Ausgangshebel",
+    "Switch": "Schalter"
+  };
+
+  const text = (de, en) => lang === "de" ? de : en;
+  const categoryName = name =>
+    lang === "de" ? german[name] || name : name;
+
+  const css = document.createElement("style");
+  css.textContent = `
+    #communityLayer {
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+    .community-marker {
+      position:absolute;
+      transform:translate(-50%,-50%);
+      width:23px;
+      height:23px;
+      padding:0;
+      display:grid;
+      place-items:center;
+      border:1px solid #ffffffbb;
+      border-radius:6px;
+      color:#101510;
+      font-size:12px;
+      font-weight:800;
+      line-height:1;
+      pointer-events:auto;
+      box-shadow:0 2px 5px #0009;
+      z-index:1;
+    }
+    .community-marker:hover,
+    .community-marker:focus-visible {
+      z-index:5;
+      outline:2px solid white;
+      transform:translate(-50%,-50%) scale(1.25);
+    }
+    #communityFilters {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+      margin:14px 0;
+      max-height:320px;
+      overflow:auto;
+    }
+    #communityFilters label {
+      font-size:12px;
+      color:#b9c7ba;
+      display:flex;
+      align-items:flex-start;
+      gap:5px;
+    }
+    #communityInfo {
+      font-size:12px;
+      line-height:1.6;
+      color:#c2ee75;
+      margin-top:12px;
+    }
+    #communityPanel input[type=text] {
+      margin:12px 0 0;
+    }
+  `;
+  document.head.append(css);
+
+  const layer = document.createElement("div");
+  layer.id = "communityLayer";
+  $("board").append(layer);
+
+  const panel = document.createElement("section");
+  panel.id = "communityPanel";
+  panel.className = "panel list";
+
+  const heading = document.createElement("h2");
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.maxLength = 100;
+
+  const actions = document.createElement("div");
+  actions.className = "actions";
+
+  const allButton = document.createElement("button");
+  const noneButton = document.createElement("button");
+  const reloadButton = document.createElement("button");
+
+  allButton.type = noneButton.type = reloadButton.type = "button";
+  actions.append(allButton, noneButton, reloadButton);
+
+  const filters = document.createElement("div");
+  filters.id = "communityFilters";
+
+  const info = document.createElement("div");
+  info.id = "communityInfo";
+  info.setAttribute("role", "status");
+
+  const notice = document.createElement("p");
+  notice.className = "help";
+
+  panel.append(
+    heading,
+    searchInput,
+    actions,
+    filters,
+    info,
+    notice
+  );
+
+  document.querySelector("aside").append(panel);
+
+  function appearance(name) {
+    const n = name.toLowerCase();
+
+    if (n.includes("extraction point")) {
+      return { symbol: "E", color: "#67caff" };
+    }
+    if (n.includes("safe")) {
+      return { symbol: "S", color: "#ffd369" };
+    }
+    if (n.includes("key")) {
+      return { symbol: "K", color: "#d6a3ff" };
+    }
+    if (n.includes("spawn")) {
+      return { symbol: "P", color: "#c2ee75" };
+    }
+    if (n.includes("sniper") || n.includes("scav")) {
+      return { symbol: "!", color: "#ff8989" };
+    }
+    if (n.includes("switch") || n.includes("lever")) {
+      return { symbol: "↔", color: "#88e3e0" };
+    }
+    if (n.includes("medical")) {
+      return { symbol: "+", color: "#9be3b1" };
+    }
+    if (n.includes("weapon")) {
+      return { symbol: "W", color: "#edbf88" };
+    }
+    if (n.includes("ammo")) {
+      return { symbol: "A", color: "#edbf88" };
+    }
+    if (n.includes("air drop")) {
+      return { symbol: "D", color: "#f8b6de" };
+    }
+    return { symbol: "L", color: "#c5cbd0" };
+  }
+
+  function isSourceMap() {
+    const file = files[selected];
+
+    return Boolean(
+      file &&
+      state().image === root + "maps/" + file + ".png"
+    );
+  }
+
+  function drawCommunity() {
+    heading.textContent = text(
+      "Automatische Kartenmarker",
+      "Automatic map markers"
+    );
+
+    searchInput.placeholder = text(
+      "Suchen: Safe, Motel, Schlüssel …",
+      "Search: Safe, Motel, Key …"
+    );
+
+    searchInput.setAttribute(
+      "aria-label",
+      text("Kartenmarker suchen", "Search map markers")
+    );
+
+    allButton.textContent = text("Alle zeigen", "Show all");
+    noneButton.textContent = text("Alle ausblenden", "Hide all");
+    reloadButton.textContent = text("Aktualisieren", "Refresh");
+    reloadButton.disabled = loading.has(selected) || !files[selected];
+
+    notice.textContent = text(
+      "Community-Standorte, keine Live-Daten. Ausgänge können Bedingungen haben; Loot ist nicht garantiert. Missionspunkte fehlen in dieser Quelle. Marker antippen für Details.",
+      "Community locations, not live data. Extractions may have requirements; loot is not guaranteed. This source has no mission locations. Tap markers for details."
+    );
+
+    layer.replaceChildren();
+    filters.replaceChildren();
+
+    const data = datasets.get(selected);
+
+    if (!files[selected]) {
+      info.textContent = text(
+        "Für diese Karte liegen noch keine Markerdaten vor.",
+        "No marker data is available for this map yet."
+      );
+      return;
+    }
+
+    if (!data) {
+      info.textContent = errors.has(selected)
+        ? text(
+            "Laden fehlgeschlagen. Tippe auf „Aktualisieren“.",
+            "Loading failed. Tap “Refresh”."
+          )
+        : text(
+            "Markerdaten werden geladen …",
+            "Loading marker data …"
+          );
+      return;
+    }
+
+    const categories = new Map(
+      data.categories.map(c => [String(c.id), c])
+    );
+
+    const counts = new Map();
+    data.markers.forEach(m => {
+      const id = String(m.categoryId);
+      counts.set(id, (counts.get(id) || 0) + 1);
+    });
+
+    data.categories.forEach(c => {
+      const id = String(c.id);
+      const label = document.createElement("label");
+      const box = document.createElement("input");
+
+      box.type = "checkbox";
+      box.checked = !hiddenCategories.has(c.name);
+
+      box.addEventListener("change", () => {
+        if (box.checked) hiddenCategories.delete(c.name);
+        else hiddenCategories.add(c.name);
+
+        drawCommunity();
+      });
+
+      label.append(
+        box,
+        document.createTextNode(
+          categoryName(c.name) + " (" + (counts.get(id) || 0) + ")"
+        )
+      );
+
+      filters.append(label);
+    });
+
+    if (!isSourceMap()) {
+      info.textContent = text(
+        "Marker erscheinen auf dem automatisch geladenen Original-Kartenbild. Auf eigenen Bildern werden sie zur Vermeidung falscher Positionen ausgeblendet.",
+        "Markers appear on the automatically loaded source map. They are hidden on custom images to avoid incorrect positions."
+      );
+      return;
+    }
+
+    const [[minX, minY], [maxX, maxY]] = data.mapBounds;
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const query = search.trim().toLowerCase();
+    let shown = 0;
+
+    const fragment = document.createDocumentFragment();
+
+    data.markers.forEach(m => {
+      const category = categories.get(String(m.categoryId));
+      if (!category || hiddenCategories.has(category.name)) return;
+
+      const title = String(m.popup?.title || category.name);
+      const description = String(m.popup?.description || "");
+
+      const searchable = [
+        title,
+        description,
+        category.name,
+        categoryName(category.name)
+      ].join(" ").toLowerCase();
+
+      if (query && !searchable.includes(query)) return;
+
+      const [sourceX, sourceY] = m.position;
+      const x = (sourceX - minX) / width * 100;
+
+      // Source coordinates start at the bottom left.
+      // CSS coordinates start at the top left.
+      const y = 100 - (sourceY - minY) / height * 100;
+
+      if (x < 0 || x > 100 || y < 0 || y > 100) return;
+
+      const look = appearance(category.name);
+      const marker = document.createElement("button");
+
+      marker.type = "button";
+      marker.className = "community-marker";
+      marker.style.left = x + "%";
+      marker.style.top = y + "%";
+      marker.style.background = look.color;
+      marker.textContent = look.symbol;
+      marker.title = categoryName(category.name) + ": " + title;
+      marker.setAttribute("aria-label", marker.title);
+
+      marker.addEventListener("click", event => {
+        event.stopPropagation();
+
+        alert(
+          categoryName(category.name) +
+          "\n\n" + title +
+          (description ? "\n\n" + description : "") +
+          "\n\n" +
+          text(
+            "Quelle: ABI-InteractiveMaps. Bedingungen und Angaben können veraltet sein.",
+            "Source: ABI-InteractiveMaps. Requirements and details may be outdated."
+          )
+        );
+      });
+
+      fragment.append(marker);
+      shown++;
+    });
+
+    layer.append(fragment);
+
+    info.textContent = text(
+      shown + " von " + data.markers.length + " Markern sichtbar.",
+      shown + " of " + data.markers.length + " markers visible."
+    );
+
+    if (errors.has(selected)) {
+      info.textContent += text(
+        " Aktualisierung fehlgeschlagen; vorheriger Stand bleibt sichtbar.",
+        " Refresh failed; previous data remains visible."
+      );
+    }
+  }
+
+  async function loadMarkers(force = false) {
+    const id = selected;
+    const file = files[id];
+
+    if (!file || loading.has(id)) return;
+    if (datasets.has(id) && !force) return;
+
+    loading.add(id);
+    errors.delete(id);
+    drawCommunity();
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25000);
+
+    try {
+      const url = root + "coordinates/" + file + ".json";
+      const response = await fetch(
+        url + (force ? "?refresh=" + Date.now() : ""),
+        { signal: controller.signal }
+      );
+
+      if (!response.ok) throw new Error("HTTP " + response.status);
+
+      const data = await response.json();
+
+      if (
+        !Array.isArray(data.categories) ||
+        !Array.isArray(data.markers) ||
+        !Array.isArray(data.mapBounds) ||
+        data.coordinateOrder !== "xy" ||
+        data.origin !== "bottom-left"
+      ) {
+        throw new Error("Unexpected map format");
+      }
+
+      const bounds = data.mapBounds;
+
+      if (
+        bounds.length !== 2 ||
+        !bounds.every(p =>
+          Array.isArray(p) &&
+          p.length === 2 &&
+          p.every(Number.isFinite)
+        ) ||
+        bounds[1][0] <= bounds[0][0] ||
+        bounds[1][1] <= bounds[0][1]
+      ) {
+        throw new Error("Invalid map bounds");
+      }
+
+      data.categories = data.categories.filter(c =>
+        c && typeof c.name === "string" && c.id != null
+      );
+
+      data.markers = data.markers.filter(m =>
+        m &&
+        Array.isArray(m.position) &&
+        m.position.length === 2 &&
+        m.position.every(Number.isFinite)
+      );
+
+      datasets.set(id, data);
+    } catch (error) {
+      errors.add(id);
+    } finally {
+      clearTimeout(timer);
+      loading.delete(id);
+
+      if (selected === id) drawCommunity();
+    }
+  }
+
+  searchInput.addEventListener("input", () => {
+    search = searchInput.value;
+    drawCommunity();
+  });
+
+  allButton.addEventListener("click", () => {
+    hiddenCategories.clear();
+    drawCommunity();
+  });
+
+  noneButton.addEventListener("click", () => {
+    datasets.get(selected)?.categories.forEach(c => {
+      hiddenCategories.add(c.name);
+    });
+    drawCommunity();
+  });
+
+  reloadButton.addEventListener("click", () => loadMarkers(true));
+
+  // Redraw community markers whenever the existing app redraws.
+  const originalRender = render;
+
+  render = function() {
+    originalRender();
+    drawCommunity();
+  };
+
+  $("mapSelect").addEventListener("change", () => loadMarkers());
+
+  render();
+  loadMarkers();
+})();
+</script>
 </body>
 </html>

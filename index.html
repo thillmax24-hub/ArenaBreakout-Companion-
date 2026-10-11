@@ -1463,5 +1463,971 @@ if(typeof L==="undefined"){
   loadSelected();
 }
 </script>
+<script>
+(function(){
+"use strict";
+
+if(window.abiRaidPlanner)return;
+if(typeof configs==="undefined"||
+   typeof drawCommunity!=="function")return;
+
+window.abiRaidPlanner=true;
+
+const KEY="abi-raid-plans-v1";
+const el=id=>document.getElementById("rp"+id);
+const uid=()=>crypto.randomUUID?.()||
+  Date.now().toString(36)+Math.random().toString(36).slice(2);
+const text=(v,n=120)=>typeof v==="string"?v.slice(0,n):"";
+
+const defaults=[
+  "Medikamente",
+  "Schmerzmittel",
+  "Verbände",
+  "Munition und Magazine",
+  "Rüstung und Helm",
+  "Rucksack",
+  "Benötigte Schlüssel"
+];
+
+function cleanPlan(p){
+  p=p&&typeof p==="object"?p:{};
+
+  return {
+    id:text(p.id),
+    name:text(p.name)||"Mein Raid",
+    map:configs[p.map]?p.map:"farm",
+    goal:text(p.goal)||"Safes looten",
+    build:text(p.build),
+    armor:text(p.armor),
+    ammo:text(p.ammo),
+    notes:text(p.notes,1500),
+
+    route:(Array.isArray(p.route)?p.route:[])
+      .filter(x=>
+        x&&Number.isFinite(x.x)&&Number.isFinite(x.y)&&
+        x.x>=0&&x.x<=100&&x.y>=0&&x.y<=100
+      )
+      .slice(0,150)
+      .map(x=>({
+        x:x.x,
+        y:x.y,
+        name:text(x.name)||"Routenpunkt"
+      })),
+
+    checks:(Array.isArray(p.checks)
+      ?p.checks
+      :defaults.map(label=>({label,done:false})))
+      .filter(x=>
+        x&&typeof x.label==="string"&&x.label.trim()
+      )
+      .slice(0,30)
+      .map(x=>({
+        label:text(x.label),
+        done:x.done===true
+      }))
+  };
+}
+
+let stored={};
+
+try{
+  stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{};
+}catch(e){}
+
+let plans=(Array.isArray(stored.plans)?stored.plans:[])
+  .slice(0,30).map(cleanPlan);
+
+let draft=cleanPlan(stored.draft||{map:selected});
+let editing=false;
+let layer=null;
+let frame=null;
+let catalog=[];
+
+function cleanBuilds(rows){
+  return (Array.isArray(rows)?rows:[])
+    .filter(b=>
+      b&&typeof b.id==="string"&&typeof b.name==="string"
+    )
+    .slice(0,250)
+    .map(b=>({
+      id:text(b.id),
+      name:text(b.name),
+      weapon:text(b.weapon),
+      code:text(b.code,500),
+      warning:text(b.warning,500),
+      parts:(Array.isArray(b.parts)?b.parts:[])
+        .filter(p=>
+          Array.isArray(p)&&p.length===2&&
+          p.every(x=>typeof x==="string")
+        )
+        .slice(0,50)
+        .map(p=>p.map(x=>text(x,300)))
+    }));
+}
+
+catalog=cleanBuilds(stored.catalog);
+
+const style=document.createElement("style");
+
+style.textContent=`
+#rpPanel{
+  max-width:1200px;
+  margin:18px auto;
+  padding:22px;
+  background:
+    linear-gradient(135deg,#171d22ed,#0b0e11ed),
+    url('./armor-texture.PNG') center/cover;
+  border:2px solid #60696f;
+  border-radius:8px;
+  color:#eee;
+  box-shadow:
+    inset 0 1px 0 #aab4ba55,
+    0 8px 30px #0008;
+}
+#rpPanel[hidden],#rpMapBar[hidden]{
+  display:none!important;
+}
+#rpPanel h2{
+  margin:0;
+  color:#ff9c4c;
+}
+#rpPanel p{
+  line-height:1.5;
+}
+#rpPanel label{
+  display:block;
+  color:#c9d0d5;
+}
+.rpGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.rpWide{
+  grid-column:1/-1;
+}
+#rpPanel input:not([type=checkbox]),
+#rpPanel select,
+#rpPanel textarea{
+  display:block;
+  box-sizing:border-box;
+  width:100%;
+  min-height:46px;
+  margin-top:6px;
+  padding:10px;
+  background:#10161a;
+  color:#fff;
+  border:1px solid #69757c;
+  border-radius:5px;
+  font:inherit;
+}
+#rpPanel textarea{
+  resize:vertical;
+}
+.rpActions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:12px 0;
+}
+#rpPanel button,#rpMapBar button{
+  min-height:44px;
+  padding:9px 13px;
+  font:inherit;
+  cursor:pointer;
+  background:#273139;
+  color:#fff;
+  border:1px solid #78848c;
+  border-radius:5px;
+}
+.rpOrange{
+  background:#ed812f!important;
+  color:#130c06!important;
+  font-weight:bold;
+}
+#rpChecks label{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin:8px 0;
+}
+#rpChecks input{
+  width:22px;
+  height:22px;
+  accent-color:#ff963f;
+}
+#rpChecks button{
+  margin-left:auto;
+}
+#rpRouteList{
+  padding-left:26px;
+}
+#rpRouteList li{
+  padding:6px 0;
+}
+#rpRouteList button{
+  min-width:40px;
+  margin-left:5px;
+  padding:5px 9px;
+}
+#rpParts{
+  white-space:pre-wrap;
+  line-height:1.6;
+}
+#rpStatus{
+  color:#ffd2ae;
+  min-height:24px;
+}
+.rpMuted{
+  color:#b3bdc3;
+  font-size:.92rem;
+}
+#rpMapBar{
+  position:fixed;
+  bottom:18px;
+  left:12px;
+  right:12px;
+  max-width:700px;
+  margin:auto;
+  z-index:1100;
+  background:#161c20f5;
+  border:1px solid #ff963f;
+  padding:10px 14px;
+  border-radius:8px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  color:white;
+  box-shadow:0 4px 24px #000;
+}
+.rpPoint{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#ff963f;
+  color:#15100b;
+  border:2px solid #fff;
+  font:bold 12px Arial;
+  box-shadow:0 2px 5px #0009;
+}
+@media(max-width:650px){
+  #rpPanel{
+    margin:12px;
+    padding:15px;
+  }
+  .rpGrid{
+    grid-template-columns:1fr;
+  }
+  .rpWide{
+    grid-column:auto;
+  }
+}
+`;
+
+document.head.append(style);
+
+const panel=document.createElement("section");
+panel.id="rpPanel";
+panel.hidden=true;
+
+panel.innerHTML=`
+<h2>RAID-PLANER</h2>
+
+<p class="rpMuted">
+  Karte, Ausrüstung und Route vorbereiten.
+  Die Route ist deine Planung; sie berücksichtigt keine
+  Gefahren oder Ausgangsbedingungen automatisch.
+</p>
+
+<div class="rpActions">
+  <button id="rpNew" type="button">Neuer Plan</button>
+  <button id="rpSave" class="rpOrange" type="button">
+    Plan speichern
+  </button>
+  <button id="rpDelete" type="button">
+    Gespeicherten Plan löschen
+  </button>
+  <button id="rpClose" type="button">Schließen</button>
+</div>
+
+<label>
+  Gespeicherten Plan öffnen
+  <select id="rpSaved">
+    <option value="">Plan auswählen …</option>
+  </select>
+</label>
+
+<p id="rpStatus" role="status" aria-live="polite"></p>
+
+<div class="rpGrid">
+  <label>
+    Name
+    <input id="rpName" maxlength="120">
+  </label>
+
+  <label>
+    Karte
+    <select id="rpMap"></select>
+  </label>
+
+  <label>
+    Raid-Ziel
+    <select id="rpGoal">
+      <option>Safes looten</option>
+      <option>Schlüssel suchen</option>
+      <option>Mission erledigen</option>
+      <option>PvP</option>
+      <option>Eigene Route</option>
+    </select>
+  </label>
+
+  <label>
+    Waffen-Build
+    <select id="rpBuild">
+      <option value="">Ohne Build</option>
+    </select>
+  </label>
+
+  <div class="rpWide">
+    <div class="rpActions">
+      <button id="rpLoadBuilds" type="button">
+        Buildliste laden / aktualisieren
+      </button>
+      <a href="./waffen.html">Zur Waffenwerkbank</a>
+    </div>
+
+    <p id="rpBuildInfo" class="rpMuted"></p>
+
+    <details>
+      <summary>Aufsätze des gewählten Builds</summary>
+      <div id="rpParts"></div>
+    </details>
+
+    <div class="rpActions">
+      <button id="rpCopy" type="button">
+        Importcode kopieren
+      </button>
+    </div>
+
+    <code id="rpCode" style="overflow-wrap:anywhere"></code>
+  </div>
+
+  <label>
+    Rüstung und Helm
+    <input id="rpArmor" maxlength="120"
+      placeholder="Eigene Ausrüstung eintragen">
+  </label>
+
+  <label>
+    Munition
+    <input id="rpAmmo" maxlength="120"
+      placeholder="Typ und Menge eintragen">
+  </label>
+
+  <label class="rpWide">
+    Mission / Notizen
+    <textarea id="rpNotes" rows="3" maxlength="1500"
+      placeholder="Benötigte Schlüssel, Ausgangsbedingungen …"></textarea>
+  </label>
+</div>
+
+<h3>Raid-Checkliste</h3>
+
+<div id="rpChecks"></div>
+
+<label>
+  Eigener Checkpunkt
+  <input id="rpNewCheck" maxlength="120"
+    placeholder="z. B. Motel-Schlüssel">
+</label>
+
+<div class="rpActions">
+  <button id="rpAddCheck" type="button">
+    Checkpunkt hinzufügen
+  </button>
+</div>
+
+<h3>Geplante Route</h3>
+
+<p class="rpMuted">
+  Routenmodus einschalten und Marker oder freie Stellen
+  auf der Karte antippen. Die Nummern zeigen die Reihenfolge.
+  Die Linie ist keine geprüfte Laufstrecke.
+</p>
+
+<div class="rpActions">
+  <button id="rpEditRoute" class="rpOrange" type="button">
+    Route auf Karte wählen
+  </button>
+  <button id="rpClearRoute" type="button">Route leeren</button>
+</div>
+
+<ol id="rpRouteList"></ol>
+
+<p class="rpMuted">
+  Dein Entwurf wird auf diesem Gerät automatisch
+  zwischengespeichert. Mit „Plan speichern“ legst du ihn
+  zusätzlich in deiner Planliste ab.
+  Keine Kontosynchronisierung.
+</p>
+`;
+
+const header=document.querySelector("header");
+header.after(panel);
+
+const launch=document.createElement("button");
+launch.type="button";
+launch.textContent="Raid-Planer";
+launch.className="orange";
+(header.lastElementChild||header).append(launch);
+
+const bar=document.createElement("div");
+bar.id="rpMapBar";
+bar.hidden=true;
+bar.innerHTML=`
+  <span id="rpMapCount"></span>
+  <button id="rpFinish" type="button">Route fertig</button>
+`;
+document.body.append(bar);
+
+function say(message){
+  el("Status").textContent=message;
+}
+
+function persist(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({
+      plans,draft,catalog
+    }));
+    return true;
+  }catch(e){
+    say("Speicher voll oder gesperrt. "+
+      "Änderungen bleiben nur in dieser Sitzung.");
+    return false;
+  }
+}
+
+function option(select,value,label){
+  const o=document.createElement("option");
+  o.value=value;
+  o.textContent=label;
+  select.append(o);
+}
+
+for(const [id,c]of Object.entries(configs)){
+  option(el("Map"),id,c.name);
+}
+
+function savedList(){
+  el("Saved").replaceChildren();
+  option(el("Saved"),"","Plan auswählen …");
+
+  for(const p of plans){
+    option(el("Saved"),p.id,
+      p.name+" · "+configs[p.map].name);
+  }
+
+  el("Saved").value=plans.some(p=>p.id===draft.id)
+    ?draft.id:"";
+}
+
+function buildList(){
+  el("Build").replaceChildren();
+  option(el("Build"),"","Ohne Build");
+
+  for(const b of catalog){
+    option(el("Build"),b.id,b.name);
+  }
+
+  if(draft.build&&!catalog.some(b=>b.id===draft.build)){
+    option(el("Build"),draft.build,
+      "Gespeicherter Build – Liste bitte laden");
+  }
+
+  el("Build").value=draft.build;
+  buildInfo();
+}
+
+function buildInfo(){
+  const b=catalog.find(b=>b.id===draft.build);
+
+  el("BuildInfo").textContent=b
+    ?b.warning
+    :catalog.length
+      ?catalog.length+" Builds verfügbar."
+      :"Buildliste von deiner Waffen-Seite laden.";
+
+  el("Parts").textContent=b
+    ?b.parts.length
+      ?b.parts.map(p=>p[0]+": "+p[1]).join("\n")
+      :"Für diesen Build ist keine Aufsatzliste hinterlegt."
+    :"Build auswählen.";
+
+  el("Code").textContent=b?.code||
+    "Kein Importcode ausgewählt.";
+
+  el("Copy").disabled=!b?.code;
+}
+
+function checks(){
+  el("Checks").replaceChildren();
+
+  draft.checks.forEach((c,index)=>{
+    const label=document.createElement("label");
+    const input=document.createElement("input");
+    input.type="checkbox";
+    input.checked=c.done;
+
+    const span=document.createElement("span");
+    span.textContent=c.label;
+
+    input.addEventListener("change",()=>{
+      c.done=input.checked;
+      persist();
+    });
+
+    const remove=document.createElement("button");
+    remove.type="button";
+    remove.textContent="×";
+    remove.setAttribute("aria-label",c.label+" entfernen");
+
+    remove.addEventListener("click",e=>{
+      e.preventDefault();
+      draft.checks.splice(index,1);
+      persist();
+      checks();
+    });
+
+    label.append(input,span,remove);
+    el("Checks").append(label);
+  });
+}
+
+function routeList(){
+  el("RouteList").replaceChildren();
+
+  draft.route.forEach((point,index)=>{
+    const li=document.createElement("li");
+    const name=document.createElement("span");
+    name.textContent=point.name;
+    li.append(name);
+
+    for(const [label,delta]of [
+      ["↑",-1],["↓",1],["×",0]
+    ]){
+      const b=document.createElement("button");
+      b.type="button";
+      b.textContent=label;
+
+      b.setAttribute("aria-label",delta
+        ?"Routenpunkt "+(index+1)+" "+
+          (delta<0?"nach oben":"nach unten")
+        :"Routenpunkt "+(index+1)+" entfernen");
+
+      b.disabled=delta!==0&&(
+        index+delta<0||
+        index+delta>=draft.route.length
+      );
+
+      b.addEventListener("click",()=>{
+        if(!delta){
+          draft.route.splice(index,1);
+        }else{
+          [
+            draft.route[index],
+            draft.route[index+delta]
+          ]=[
+            draft.route[index+delta],
+            draft.route[index]
+          ];
+        }
+
+        persist();
+        routeList();
+        drawRoute();
+      });
+
+      li.append(b);
+    }
+
+    el("RouteList").append(li);
+  });
+
+  el("MapCount").textContent=
+    draft.route.length+" Routenpunkte · "+
+    configs[draft.map].name;
+}
+
+function fill(){
+  for(const [id,key]of [
+    ["Name","name"],
+    ["Map","map"],
+    ["Goal","goal"],
+    ["Armor","armor"],
+    ["Ammo","ammo"],
+    ["Notes","notes"]
+  ]){
+    el(id).value=draft[key];
+  }
+
+  if(!el("Goal").value){
+    draft.goal="Eigene Route";
+    el("Goal").value=draft.goal;
+  }
+
+  savedList();
+  buildList();
+  checks();
+  routeList();
+  drawRoute();
+}
+
+function switchMap(){
+  if(selected!==draft.map){
+    $("mapSelect").value=draft.map;
+    $("mapSelect").dispatchEvent(
+      new Event("change",{bubbles:true})
+    );
+  }
+}
+
+function show(){
+  panel.hidden=false;
+  panel.scrollIntoView({
+    behavior:"smooth",
+    block:"start"
+  });
+}
+
+function stopRoute(){
+  editing=false;
+  bar.hidden=true;
+}
+
+function drawRoute(){
+  if(!leafletMap||typeof L==="undefined")return;
+
+  if(!layer){
+    layer=L.layerGroup().addTo(leafletMap);
+  }
+
+  layer.clearLayers();
+
+  if(
+    !bounds||!imageLayer||
+    selected!==draft.map||loading
+  )return;
+
+  const points=draft.route.map(positionToLatLng);
+
+  if(points.length>1){
+    L.polyline(points,{
+      color:"#ff963f",
+      weight:3,
+      dashArray:"7 5",
+      interactive:false
+    }).addTo(layer);
+  }
+
+  points.forEach((latlng,index)=>{
+    const icon=L.divIcon({
+      className:"",
+      html:'<div class="rpPoint">'+(index+1)+'</div>',
+      iconSize:[28,28],
+      iconAnchor:[14,14]
+    });
+
+    L.marker(latlng,{
+      icon,
+      interactive:false,
+      zIndexOffset:2000
+    }).addTo(layer);
+  });
+}
+
+function addPoint(latlng,name){
+  if(
+    !editing||selected!==draft.map||loading||
+    !bounds||!imageLayer||!bounds.contains(latlng)
+  )return;
+
+  if(draft.route.length>=150){
+    say("Maximal 150 Routenpunkte pro Plan.");
+    stopRoute();
+    show();
+    return;
+  }
+
+  draft.route.push({
+    ...latLngToPosition(latlng),
+    name:text(name)||
+      "Routenpunkt "+(draft.route.length+1)
+  });
+
+  persist();
+  routeList();
+  drawRoute();
+}
+
+const originalDraw=drawCommunity;
+
+drawCommunity=function(){
+  originalDraw();
+
+  communityLayer?.eachLayer(marker=>{
+    if(typeof marker.getLatLng==="function"){
+      marker.on("click",()=>{
+        addPoint(
+          marker.getLatLng(),
+          marker.options.title
+        );
+      });
+    }
+  });
+
+  drawRoute();
+};
+
+if(leafletMap){
+  leafletMap.on("click",event=>{
+    if(tool==="inspect"){
+      addPoint(event.latlng,"");
+    }
+  });
+}
+
+document.querySelectorAll("[data-tool]").forEach(b=>{
+  b.addEventListener("click",stopRoute);
+});
+
+$("mapSelect").addEventListener("change",()=>{
+  stopRoute();
+  drawRoute();
+});
+
+launch.addEventListener("click",show);
+
+el("Close").addEventListener("click",()=>{
+  stopRoute();
+  panel.hidden=true;
+});
+
+el("New").addEventListener("click",()=>{
+  stopRoute();
+  draft=cleanPlan({map:selected});
+  persist();
+  fill();
+  say("Neuer Entwurf.");
+});
+
+el("Saved").addEventListener("change",()=>{
+  const p=plans.find(p=>p.id===el("Saved").value);
+  if(!p)return;
+
+  stopRoute();
+  draft=cleanPlan(p);
+  persist();
+  fill();
+  switchMap();
+  say("Plan geöffnet.");
+});
+
+el("Save").addEventListener("click",()=>{
+  if(!draft.id)draft.id=uid();
+
+  const index=plans.findIndex(p=>p.id===draft.id);
+
+  if(index<0&&plans.length>=30){
+    say("Maximal 30 gespeicherte Pläne.");
+    return;
+  }
+
+  if(index<0){
+    plans.push(cleanPlan(draft));
+  }else{
+    plans[index]=cleanPlan(draft);
+  }
+
+  if(persist()){
+    savedList();
+    say("Plan gespeichert: "+draft.name);
+  }
+});
+
+el("Delete").addEventListener("click",()=>{
+  if(!plans.some(p=>p.id===draft.id)){
+    say("Dieser Entwurf ist noch nicht in der Planliste.");
+    return;
+  }
+
+  if(!confirm(
+    "Gespeicherten Plan „"+draft.name+"“ löschen?"
+  ))return;
+
+  plans=plans.filter(p=>p.id!==draft.id);
+  draft.id="";
+  persist();
+  savedList();
+
+  say("Aus der Planliste entfernt. "+
+    "Der Entwurf bleibt geöffnet.");
+});
+
+for(const [id,key]of [
+  ["Name","name"],
+  ["Goal","goal"],
+  ["Armor","armor"],
+  ["Ammo","ammo"],
+  ["Notes","notes"]
+]){
+  el(id).addEventListener("input",()=>{
+    draft[key]=el(id).value;
+    persist();
+  });
+}
+
+el("Build").addEventListener("change",()=>{
+  draft.build=el("Build").value;
+  persist();
+  buildInfo();
+});
+
+el("Map").addEventListener("change",()=>{
+  if(draft.route.length&&!confirm(
+    "Beim Kartenwechsel die Route dieses Entwurfs leeren?"
+  )){
+    el("Map").value=draft.map;
+    return;
+  }
+
+  stopRoute();
+  draft.map=el("Map").value;
+  draft.route=[];
+  persist();
+  routeList();
+  switchMap();
+  drawRoute();
+});
+
+el("AddCheck").addEventListener("click",()=>{
+  const label=el("NewCheck").value.trim();
+  if(!label)return;
+
+  if(draft.checks.length>=30){
+    say("Maximal 30 Checkpunkte.");
+    return;
+  }
+
+  draft.checks.push({label,done:false});
+  el("NewCheck").value="";
+  persist();
+  checks();
+});
+
+el("EditRoute").addEventListener("click",()=>{
+  if(!leafletMap){
+    say("Die Karte ist noch nicht verfügbar.");
+    return;
+  }
+
+  switchMap();
+  tool="inspect";
+  translate();
+
+  editing=true;
+  bar.hidden=false;
+  routeList();
+
+  $("map").scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+
+  drawCommunity();
+});
+
+el("Finish").addEventListener("click",()=>{
+  stopRoute();
+  show();
+
+  say("Route im Entwurf gesichert. "+
+    "„Plan speichern“ aktualisiert deine Planliste.");
+});
+
+el("ClearRoute").addEventListener("click",()=>{
+  if(draft.route.length&&!confirm(
+    "Route dieses Entwurfs leeren?"
+  ))return;
+
+  draft.route=[];
+  persist();
+  routeList();
+  drawRoute();
+});
+
+el("Copy").addEventListener("click",async()=>{
+  const code=catalog.find(b=>b.id===draft.build)?.code;
+  if(!code)return;
+
+  try{
+    await navigator.clipboard.writeText(code);
+    say("Importcode kopiert.");
+  }catch(e){
+    say("Kopieren nicht möglich. "+
+      "Den angezeigten Code gedrückt halten und kopieren.");
+  }
+});
+
+el("LoadBuilds").addEventListener("click",()=>{
+  if(frame)frame.remove();
+
+  frame=document.createElement("iframe");
+  frame.hidden=true;
+  frame.title="Waffen-Buildliste";
+  frame.src="./waffen.html";
+
+  frame.addEventListener("load",()=>{
+    frame.contentWindow.postMessage({
+      type:"ABI_RAID_BUILDS_REQUEST"
+    },location.origin);
+  });
+
+  document.body.append(frame);
+  say("Buildliste wird geladen …");
+
+  const requested=frame;
+
+  setTimeout(()=>{
+    if(
+      frame===requested&&
+      el("Status").textContent==="Buildliste wird geladen …"
+    ){
+      say("Keine Antwort. Bitte den Verbindungsblock "+
+        "in waffen.html einfügen und erneut laden.");
+    }
+  },12000);
+});
+
+window.addEventListener("message",event=>{
+  if(
+    event.origin!==location.origin||
+    !frame||
+    event.source!==frame.contentWindow||
+    event.data?.type!=="ABI_RAID_BUILDS"
+  )return;
+
+  catalog=cleanBuilds(event.data.builds);
+  persist();
+  buildList();
+  say(catalog.length+" Builds übernommen.");
+});
+
+fill();
+drawCommunity();
+})();
+</script>
 </body>
 </html>

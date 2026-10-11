@@ -405,5 +405,203 @@ URL.revokeObjectURL(url);
 });
 render();
 </script>
+<script>
+(() => {
+  "use strict";
+
+  const base =
+    "https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/maps/";
+
+  const automaticMaps = {
+    farm: base + "farm.png",
+    valley: base + "valley.png",
+    armory: base + "armory.png",
+    tv: base + "tv-station.png"
+  };
+
+  const pending = new Map();
+  const failures = new Set();
+
+  const messages = {
+    de: {
+      loading: "Kartenbild wird automatisch geladen …",
+      loaded: "Community-Kartenbild geladen. Positionen bleiben manuell.",
+      failed: "Karte konnte nicht geladen werden. Tippe auf „Karte erneut laden“.",
+      missing: "Für diese Karte ist noch kein automatisches Bild hinterlegt.",
+      retry: "Karte erneut laden",
+      source: "Kartenquelle: Nicolas Aigner / ABI-InteractiveMaps",
+      sourceNote: "Community-Karten können vom aktuellen Spielstand abweichen."
+    },
+    en: {
+      loading: "Loading map image automatically …",
+      loaded: "Community map image loaded. Positions remain manual.",
+      failed: "Map could not load. Tap “Retry map loading”.",
+      missing: "No automatic image is available for this map yet.",
+      retry: "Retry map loading",
+      source: "Map source: Nicolas Aigner / ABI-InteractiveMaps",
+      sourceNote: "Community maps may differ from the current game."
+    }
+  };
+
+  translations.de.imageHelp =
+    "Farm, Valley, Armory und TV Station laden automatisch. Eigene Kartenbilder bleiben erhalten.";
+  translations.en.imageHelp =
+    "Farm, Valley, Armory and TV Station load automatically. Your custom map images are preserved.";
+
+  translations.de.emptyText =
+    "Verfügbare Kartenbilder werden automatisch geladen. Alternativ kannst du ein eigenes Bild auswählen.";
+  translations.en.emptyText =
+    "Available map images load automatically. You can also upload your own image.";
+
+  const retryButton = document.createElement("button");
+  retryButton.type = "button";
+  retryButton.style.marginTop = "10px";
+  $("status").after(retryButton);
+
+  const credits = document.createElement("div");
+  credits.style.cssText =
+    "margin-top:14px;font-size:12px;color:#9cad9f;line-height:1.6";
+
+  const sourceLink = document.createElement("a");
+  sourceLink.href =
+    "https://github.com/nicolasaigner/ABI-InteractiveMaps";
+  sourceLink.target = "_blank";
+  sourceLink.rel = "noopener noreferrer";
+  sourceLink.style.color = "#c2ee75";
+
+  const licenseLink = document.createElement("a");
+  licenseLink.href =
+    "https://github.com/nicolasaigner/ABI-InteractiveMaps/blob/main/LICENSE";
+  licenseLink.target = "_blank";
+  licenseLink.rel = "noopener noreferrer";
+  licenseLink.textContent = "MIT";
+  licenseLink.style.color = "#c2ee75";
+
+  const sourceNote = document.createElement("div");
+
+  credits.append(
+    sourceLink,
+    document.createTextNode(" · "),
+    licenseLink,
+    sourceNote
+  );
+
+  $("viewport").parentElement.append(credits);
+
+  function updateLabels() {
+    const text = messages[lang];
+    retryButton.textContent = text.retry;
+    retryButton.hidden = !automaticMaps[selected];
+    retryButton.disabled = pending.has(selected);
+    sourceLink.textContent = text.source;
+    sourceNote.textContent = text.sourceNote;
+  }
+
+  function loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+
+      const timer = setTimeout(() => {
+        img.onload = null;
+        img.onerror = null;
+        img.src = "";
+        reject(new Error("Timeout"));
+      }, 60000);
+
+      img.onload = () => {
+        clearTimeout(timer);
+        resolve(img);
+      };
+
+      img.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error("Image unavailable"));
+      };
+
+      img.src = url;
+    });
+  }
+
+  async function ensureMap(force = false) {
+    const id = selected;
+    const current = state();
+    const url = automaticMaps[id];
+
+    updateLabels();
+
+    if (!url) {
+      if (!current.image) {
+        $("status").textContent = messages[lang].missing;
+      }
+      return;
+    }
+
+    // Preserve uploaded images and existing markers.
+    if (current.image && current.image !== url) return;
+
+    if (pending.has(id)) {
+      $("status").textContent = messages[lang].loading;
+      return;
+    }
+
+    if (current.image === url && !force) {
+      $("status").textContent = messages[lang].loaded;
+      return;
+    }
+
+    if (failures.has(id) && !force) {
+      $("status").textContent = messages[lang].failed;
+      return;
+    }
+
+    const originalImage = current.image;
+    pending.set(id, true);
+    failures.delete(id);
+
+    $("status").textContent = messages[lang].loading;
+    updateLabels();
+
+    try {
+      const img = await loadImage(url);
+
+      // Do not overwrite an image uploaded while loading.
+      if (maps[id] !== current ||
+          current.image !== originalImage) {
+        return;
+      }
+
+      current.image = url;
+      current.ratio = img.naturalWidth / img.naturalHeight;
+
+      if (selected === id) {
+        render();
+        $("status").textContent = messages[lang].loaded;
+      }
+    } catch (error) {
+      failures.add(id);
+
+      if (selected === id && current.image === originalImage) {
+        $("status").textContent = messages[lang].failed;
+      }
+    } finally {
+      pending.delete(id);
+      updateLabels();
+    }
+  }
+
+  retryButton.addEventListener("click", () => ensureMap(true));
+
+  $("mapSelect").addEventListener("change", () => ensureMap());
+
+  $("language").addEventListener("click", () => {
+    updateLabels();
+    ensureMap();
+  });
+
+  updateLabels();
+  render();
+  ensureMap();
+})();
+</script>
 </body>
 </html>

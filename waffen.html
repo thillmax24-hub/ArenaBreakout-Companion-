@@ -1076,5 +1076,40 @@ try{
 }
 })();
 </script>
+<script>
+(function(){
+  if(window.abiRaidBridge)return;
+  window.abiRaidBridge=true;
+
+  window.addEventListener("message",event=>{
+    if(
+      event.origin!==location.origin||
+      event.source!==parent||
+      event.data?.type!=="ABI_RAID_BUILDS_REQUEST"
+    )return;
+
+    const send=()=>{
+      if(typeof builds==="undefined")return;
+
+      parent.postMessage({
+        type:"ABI_RAID_BUILDS",
+        builds:builds.map(b=>({
+          id:b.id,
+          name:b.name,
+          weapon:b.weapon,
+          code:b.code||"",
+          parts:Array.isArray(b.parts)?b.parts:[],
+          warning:b.onlineSource
+            ?"Quellen-Build: Aufsätze und Importcode im Spiel prüfen."
+            :"Community-Build: Patchstand prüfen."
+        }))
+      },location.origin);
+    };
+
+    send();
+    [500,2000,5000].forEach(delay=>setTimeout(send,delay));
+  });
+})();
+</script>
 </body>
 </html>

@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#15191c">
 <title>Arena Breakout · Black Steel Companion</title>
-
-<link rel="stylesheet"
- href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
 :root{
@@ -15,123 +13,89 @@
   --orange:#ff8735;
   --text:#f0ede6;
   --muted:#c0c5bf;
-  --steel:#303a40;
   --armor:url("./armor-texture.PNG");
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{
-  margin:0;
-  color:var(--text);
+  margin:0;color:var(--text);
   background:radial-gradient(ellipse at top,#394248,#151b1f 55%,#090d10);
   font:14px system-ui,sans-serif;
 }
-button,input,select{font:inherit}
+button,input,select,textarea{font:inherit}
 button,select,input[type=text],.upload{
-  border:1px solid #7b878d;
-  border-radius:4px;
-  color:var(--text);
-  padding:11px 12px;
+  border:1px solid #7b878d;border-radius:4px;
+  color:var(--text);padding:11px 12px;
 }
 button,.upload{
-  cursor:pointer;
-  min-height:44px;
+  cursor:pointer;min-height:44px;
   background:linear-gradient(145deg,#465158,#29343a 50%,#182228);
   box-shadow:inset 0 1px 0 #c3ced344,inset 0 -2px 0 #0b1318,0 2px 5px #0006;
 }
 button:hover,.upload:hover{border-color:#ffb37b}
 button:disabled{opacity:.45;cursor:default}
 button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
-  outline:2px solid #ffb37b;
-  outline-offset:3px;
+  outline:2px solid #ffb37b;outline-offset:3px;
 }
 button.active,button[aria-pressed=true],.orange{
   background:linear-gradient(145deg,#ffb16b,#f47e2b 60%,#c85919);
-  color:#25180f;
-  border-color:#ffc28c;
-  font-weight:800;
+  color:#25180f;border-color:#ffc28c;font-weight:800;
   box-shadow:inset 0 1px 0 #ffe3c277,inset 0 -2px 0 #923c0c,0 0 13px #ff87352b;
 }
 input[type=text],select{
   background:linear-gradient(#121b20,#232d32);
   box-shadow:inset 0 2px 5px #0007;
-  font-size:16px;
-  min-height:44px;
+  font-size:16px;min-height:44px;
 }
 input[type=checkbox]{accent-color:var(--orange)}
 a{color:#ffb078}
-
 header{
-  max-width:1540px;
-  margin:12px auto 0;
-  padding:30px 36px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:15px;
-  position:relative;
+  max-width:1540px;margin:12px auto 0;padding:30px 36px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:15px;position:relative;flex-wrap:wrap;
   background-color:#252b2f;
   background-image:linear-gradient(#10151912,#10151928),var(--armor);
   background-size:100% 100%;
-  border:2px solid #758086;
-  border-radius:6px;
+  border:2px solid #758086;border-radius:6px;
   box-shadow:inset 0 1px 0 #bcc7ca55,inset 0 -3px 0 #080d10,0 8px 25px #0008;
 }
 header:after{
-  content:"";
-  position:absolute;
-  left:25px;right:25px;bottom:0;
-  height:3px;
+  content:"";position:absolute;left:25px;right:25px;bottom:0;height:3px;
   background:linear-gradient(90deg,transparent,#ff8735 20%,#ffc58a 50%,#ff8735 80%,transparent);
-  box-shadow:0 0 13px #ff873555;
-  pointer-events:none;
+  box-shadow:0 0 13px #ff873555;pointer-events:none;
 }
 .brand{
-  font-size:clamp(20px,3.3vw,35px);
-  font-weight:900;
-  letter-spacing:.8px;
-  text-shadow:0 3px 4px #000;
+  font-size:clamp(20px,3.3vw,35px);font-weight:900;
+  letter-spacing:.8px;text-shadow:0 3px 4px #000;
 }
 .brand small{
-  display:block;
-  color:#e2b084;
-  font-size:10px;
-  letter-spacing:2px;
-  margin-top:7px;
-  line-height:1.6;
+  display:block;color:#e2b084;font-size:10px;
+  letter-spacing:2px;margin-top:7px;line-height:1.6;
+}
+.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.weapon-link{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:11px 16px;border:1px solid #ffc28c;
+  border-radius:4px;text-decoration:none;
 }
 main{
-  max-width:1568px;
-  margin:auto;
-  padding:16px 14px;
-  display:grid;
-  grid-template-columns:310px minmax(0,1fr);
-  align-items:start;
-  gap:16px;
+  max-width:1568px;margin:auto;padding:16px 14px;
+  display:grid;grid-template-columns:310px minmax(0,1fr);
+  align-items:start;gap:16px;
 }
 .panel{
   background-color:#252d31;
   background-image:linear-gradient(#10171b33,#10171b44),var(--armor);
   background-size:100% 100%;
-  border:2px solid #68767c;
-  border-radius:5px;
-  padding:20px;
+  border:2px solid #68767c;border-radius:5px;padding:20px;
   box-shadow:inset 0 1px 0 #b3c2c444,inset 0 -2px 0 #080f13,0 6px 18px #0006;
 }
 aside .panel{margin-bottom:14px}
 h2{
-  margin:0 0 14px;
-  font-size:16px;
-  font-weight:800;
-  letter-spacing:.4px;
-  text-shadow:0 2px 3px #000;
+  margin:0 0 14px;font-size:16px;font-weight:800;
+  letter-spacing:.4px;text-shadow:0 2px 3px #000;
 }
-.field{
-  display:block;
-  font-size:12px;
-  color:var(--muted);
-  margin:13px 0 7px;
-}
+.field{display:block;font-size:12px;color:var(--muted);margin:13px 0 7px}
 #markerName{width:100%}
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
 .tools button{font-size:12px}
@@ -141,116 +105,80 @@ h2{
 .upload{display:block;text-align:center;margin-top:13px;font-size:12px}
 .upload input{position:absolute;width:1px;height:1px;opacity:0}
 .upload:focus-within{outline:2px solid #ffb37b;outline-offset:3px}
-#categories{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:7px;
-  margin-top:12px;
-}
+#categories{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
 #categories label{
-  display:flex;
-  align-items:flex-start;
-  gap:6px;
-  padding:9px 7px;
-  min-height:44px;
-  background:#141d23e8;
-  border:1px solid #596970;
-  border-radius:4px;
-  font-size:12px;
-  overflow-wrap:anywhere;
+  display:flex;align-items:flex-start;gap:6px;padding:9px 7px;
+  min-height:44px;background:#141d23e8;border:1px solid #596970;
+  border-radius:4px;font-size:12px;overflow-wrap:anywhere;
 }
 #categories input{margin:2px 0}
 .map-panel{min-width:0}
 .map-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:15px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;margin-bottom:15px;
 }
 .map-head h2{margin:0;font-size:20px}
 .map-head button{font-size:12px}
 .toolbar{
-  display:grid;
-  grid-template-columns:minmax(120px,1fr) auto auto;
-  gap:8px;
-  margin-bottom:12px;
+  display:grid;grid-template-columns:minmax(120px,1fr) auto auto;
+  gap:8px;margin-bottom:12px;
 }
 .toolbar select{width:100%;min-width:0}
 #keySearch{font-size:12px}
 #filterToggle{display:none}
 #search{width:100%;margin-bottom:13px}
 #results{
-  display:grid;
-  gap:6px;
-  max-height:200px;
-  overflow:auto;
-  margin-bottom:12px;
+  display:grid;gap:6px;max-height:200px;overflow:auto;margin-bottom:12px;
 }
 #results:empty{display:none}
 #results button{text-align:left;font-size:12px;border-left:3px solid var(--orange)}
 #map{
-  height:calc(100dvh - 295px);
-  min-height:460px;
-  border:4px solid #101920;
-  outline:1px solid #a0aaad66;
-  border-radius:4px;
-  background:#111a1b;
+  height:calc(100dvh - 295px);min-height:460px;
+  border:4px solid #101920;outline:1px solid #a0aaad66;
+  border-radius:4px;background:#111a1b;
   box-shadow:0 0 0 5px #354147,0 9px 20px #0007;
 }
 .status-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:19px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;margin-top:19px;
 }
 #status{font-size:12px;color:#ffb27a;line-height:1.6}
 #summary{font-size:12px;color:#c2c9c1;line-height:1.6}
-.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:13px;color:var(--muted);font-size:12px}
+.legend{
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:13px;
+  color:var(--muted);font-size:12px;
+}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
 #drawerClose{display:none}
 .backdrop{display:none}
 footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px;line-height:1.7}
-
 .small-map-icon{background:none;border:0;display:grid;place-items:center}
-.small-map-icon .hit{
-  width:28px;height:28px;
-  display:grid;place-items:center;
-}
+.small-map-icon .hit{width:28px;height:28px;display:grid;place-items:center}
 .small-map-icon img{
-  width:18px;height:18px;
-  object-fit:contain;
-  filter:drop-shadow(0 1px 2px #000);
-  pointer-events:none;
+  width:18px;height:18px;object-fit:contain;
+  filter:drop-shadow(0 1px 2px #000);pointer-events:none;
 }
-.small-map-icon:hover img{filter:drop-shadow(0 0 2px white) drop-shadow(0 1px 2px #000)}
+.small-map-icon:hover img{
+  filter:drop-shadow(0 0 2px white) drop-shadow(0 1px 2px #000);
+}
 .personal-dot{
-  width:22px;height:22px;
-  display:grid;place-items:center;
-  border:2px solid #fff;
-  border-radius:50%;
-  color:#111;
-  font-size:10px;
-  font-weight:850;
-  box-shadow:0 2px 5px #0009;
+  width:22px;height:22px;display:grid;place-items:center;
+  border:2px solid #fff;border-radius:50%;color:#111;
+  font-size:10px;font-weight:850;box-shadow:0 2px 5px #0009;
 }
-.leaflet-control-zoom{border:1px solid #859298!important;border-radius:4px!important;overflow:hidden}
+.leaflet-control-zoom{
+  border:1px solid #859298!important;border-radius:4px!important;overflow:hidden;
+}
 .leaflet-control-zoom a{
   background:linear-gradient(#435059,#1b272e)!important;
-  color:#fff0de!important;
-  border-color:#697a83!important;
+  color:#fff0de!important;border-color:#697a83!important;
   width:40px!important;height:40px!important;line-height:40px!important;
 }
 .leaflet-popup-content-wrapper{
-  color:var(--text);
-  background-color:#202a30;
+  color:var(--text);background-color:#202a30;
   background-image:linear-gradient(#11191ee0,#11191ee8),var(--armor);
-  background-size:cover;
-  border:1px solid #8f7760;
-  border-left:3px solid var(--orange);
-  border-radius:4px;
+  background-size:cover;border:1px solid #8f7760;
+  border-left:3px solid var(--orange);border-radius:4px;
   box-shadow:0 6px 22px #0008;
 }
 .leaflet-popup-tip{background:#27343b}
@@ -262,7 +190,6 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
 .leaflet-popup-close-button{color:#f4dac5!important}
 .leaflet-control-attribution{background:#131c22e8!important;color:#c3cac6!important}
 .leaflet-control-attribution a{color:#ffb17b!important}
-
 @media(max-width:850px){
   header{margin:8px 8px 0;padding:25px 21px}
   header #language{min-width:44px;padding:8px}
@@ -273,26 +200,16 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
   #filterToggle{display:block}
   #keySearch{grid-column:1/-1}
   aside{
-    position:fixed;
-    left:8px;right:8px;bottom:8px;
-    max-height:82dvh;
-    overflow:auto;
-    z-index:2100;
-    background:#182126;
-    border:2px solid #77858b;
-    border-radius:10px;
-    padding:12px;
+    position:fixed;left:8px;right:8px;bottom:8px;max-height:82dvh;
+    overflow:auto;z-index:2100;background:#182126;
+    border:2px solid #77858b;border-radius:10px;padding:12px;
     box-shadow:0 -10px 40px #0009;
   }
   aside .panel{padding:18px;margin-bottom:10px}
   #drawerClose{display:block;margin:0 0 12px auto}
   .backdrop{
-    position:fixed;inset:0;
-    background:#0009;
-    z-index:2000;
-    border:0;border-radius:0;
-    width:100%;height:100%;
-    box-shadow:none;
+    position:fixed;inset:0;background:#0009;z-index:2000;
+    border:0;border-radius:0;width:100%;height:100%;box-shadow:none;
   }
   .backdrop:not([hidden]){display:block}
   body.drawer-open{overflow:hidden}
@@ -305,27 +222,19 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
 </head>
 <body>
 
-<header style="flex-wrap:wrap">
+<header>
   <div class="brand">
     ARENA BREAKOUT
     <small>BLACK STEEL / ARMORED EDITION</small>
   </div>
-
-  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <a href="./waffen.html"
-       class="orange"
-       style="display:inline-flex;align-items:center;justify-content:center;
-              min-height:44px;padding:11px 16px;border:1px solid #ffc28c;
-              border-radius:4px;text-decoration:none">
-      Waffenwerkbank
-    </a>
-
+  <div class="header-actions">
+    <a href="./waffen.html" class="orange weapon-link">Waffenwerkbank</a>
     <button id="language" type="button">EN</button>
   </div>
 </header>
 
 <button class="backdrop" id="backdrop" type="button"
- aria-label="Filter schließen" hidden></button>
+  aria-label="Filter schließen" hidden></button>
 
 <main>
 <aside id="drawer" aria-label="Filter und eigene Planung">
@@ -333,7 +242,6 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
 
   <section class="panel">
     <h2 data-text="planning"></h2>
-
     <label for="markerName" class="field" data-text="name"></label>
     <input id="markerName" type="text" maxlength="80">
 
@@ -347,7 +255,6 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
     </div>
 
     <p class="help" data-text="instructions"></p>
-
     <div class="actions">
       <button type="button" id="undo" data-text="undo"></button>
       <button type="button" id="clearOwn" data-text="clearOwn"></button>
@@ -355,8 +262,7 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
 
     <label class="upload">
       <span data-text="upload"></span>
-      <input id="upload" type="file"
-       accept="image/png,image/jpeg,image/webp">
+      <input id="upload" type="file" accept="image/png,image/jpeg,image/webp">
     </label>
 
     <div class="actions">
@@ -399,7 +305,6 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
 
   <input id="search" type="text" maxlength="100">
   <div id="results"></div>
-
   <div id="map" aria-label="Interaktive Karte"></div>
 
   <div class="status-row">
@@ -408,7 +313,6 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
   </div>
 
   <div id="summary"></div>
-
   <div class="legend">
     <span><i class="dot" style="background:#69caff"></i><span data-text="exit"></span></span>
     <span><i class="dot" style="background:#ffd369"></i>Safes</span>
@@ -423,23 +327,21 @@ footer{text-align:center;padding:6px 16px 24px;color:var(--muted);font-size:11px
 <footer>
   <span data-text="footer"></span> ·
   <a href="https://github.com/nicolasaigner/ABI-InteractiveMaps"
-     target="_blank" rel="noopener noreferrer">ABI-InteractiveMaps</a> ·
+    target="_blank" rel="noopener noreferrer">ABI-InteractiveMaps</a> ·
   <a href="https://github.com/nicolasaigner/ABI-InteractiveMaps/blob/main/LICENSE"
-     target="_blank" rel="noopener noreferrer">MIT</a> ·
+    target="_blank" rel="noopener noreferrer">MIT</a> ·
   <a href="https://www.reddit.com/r/ArenaBreakoutInfinite/comments/1d6znjl/"
-     target="_blank" rel="noopener noreferrer"
-     data-text="keySource"></a>
+    target="_blank" rel="noopener noreferrer" data-text="keySource"></a>
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
 "use strict";
 
-const $ = id => document.getElementById(id);
-const ROOT =
-  "https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/";
-
-const configs = {
+const $=id=>document.getElementById(id);
+const ROOT="https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/";
+const configs={
   farm:{name:"Farm",file:"farm"},
   valley:{name:"Valley",file:"valley"},
   armory:{name:"Armory",file:"armory"},
@@ -448,122 +350,122 @@ const configs = {
   custom:{name:"Custom"}
 };
 
-const words = {
-  de:{
-    planning:"Eigene Planung",
-    name:"Marker-Beschriftung",
-    inspect:"Karte ansehen",
-    player:"Meine Position",
-    note:"Notiz",
-    loot:"Loot",
-    exit:"Ausgang",
-    route:"Route setzen",
-    undo:"Zurück",
-    clearOwn:"Eigene Marker löschen",
-    upload:"Eigenes Kartenbild laden",
-    original:"Originalkarte verwenden",
-    filters:"Filter",
-    close:"Schließen",
-    showAll:"Alle zeigen",
-    hideAll:"Alle ausblenden",
-    fit:"Ganze Karte",
-    refresh:"Neu laden",
-    keys:"Schlüsseltüren",
-    spawns:"Spawnpunkte",
-    keyOff:"🔑 Schlüssel-Suche einschalten",
-    keyOn:"🔑 Schlüssel-Suche aktiv",
-    keyNotice:"Schlüssel-Suche zeigt Jacken, Aktenschränke und Koffer als mögliche Fundorte. Das sind zufällige Loot-Behälter, keine garantierten oder bestätigten festen Schlüssel-Spawns.",
-    instructions:"Karte verschieben und mit zwei Fingern zoomen. Werkzeug auswählen und auf die Karte tippen. Eigene Marker lassen sich verschieben.",
-    notice:"Community-Standorte, keine Live-Ortung. Loot ist nicht garantiert. Ausgänge können Bedingungen haben. Missionspunkte fehlen in dieser Quelle. Quelldetails erscheinen auf Englisch.",
-    footer:"Inoffizielles Fanprojekt · Planung wird in diesem Browser gespeichert",
-    keySource:"Schlüssel-Suche: Spielerberichte",
-    loading:"Karte und Marker werden geladen …",
-    missing:"Für diese Karte bitte ein eigenes Kartenbild hochladen.",
-    failed:"Kartenbild konnte nicht geladen werden. Bitte „Neu laden“ drücken.",
-    dataFailed:"Karte geladen, aber Markerdaten fehlen. Bitte „Neu laden“ drücken.",
-    ready:"Karte und Community-Marker geladen.",
-    customReady:"Eigenes Bild geladen. Community-Marker sind darauf ausgeblendet.",
-    saved:"Eigene Planung gespeichert.",
-    saveFailed:"Speichern fehlgeschlagen. Änderungen bleiben nur bis zum Neuladen erhalten.",
-    libraryFailed:"Kartenbibliothek nicht geladen. Bitte die Seite neu laden.",
-    delete:"Marker entfernen",
-    confirmClear:"Alle eigenen Marker dieser Karte löschen?",
-    confirmImage:"Kartenbild wechseln und eigene Marker dieser Karte löschen?",
-    uploadFailed:"Bitte PNG, JPG oder WebP unter 15 MB auswählen.",
-    source:"Community-Daten. Angaben können veraltet sein.",
-    own:"Eigener Marker · manuell gesetzt",
-    visible:"sichtbare Community-Marker",
-    personal:"eigene Marker",
-    search:"Suchen: Safe, Motel, Key …",
-    noResults:"Keine Treffer bei den aktiven Filtern.",
-    limited:"Die ersten 40 Treffer werden angezeigt.",
-    empty:"Lade zuerst eine Karte.",
-    routePoint:"Routenpunkt",
-    custom:"Eigene Karte",
-    keyHint:"Möglicher Schlüssel-Fundort: zufälliger Loot-Behälter. Kein garantierter Schlüssel. Grundlage: Community-Spielerberichte, keine verifizierte Drop-Tabelle.",
-    mapLabel:"Karte",
-    ownImage:"eigenes Bild",
-    keyMode:"Schlüssel-Suche"
-  },
-  en:{
-    planning:"Personal planning",
-    name:"Marker label",
-    inspect:"Explore map",
-    player:"My position",
-    note:"Note",
-    loot:"Loot",
-    exit:"Extraction",
-    route:"Add route point",
-    undo:"Undo",
-    clearOwn:"Clear personal markers",
-    upload:"Upload custom map",
-    original:"Use source map",
-    filters:"Filters",
-    close:"Close",
-    showAll:"Show all",
-    hideAll:"Hide all",
-    fit:"Fit map",
-    refresh:"Reload",
-    keys:"Key rooms",
-    spawns:"Spawn points",
-    keyOff:"🔑 Enable key search",
-    keyOn:"🔑 Key search active",
-    keyNotice:"Key search highlights jackets, filing cabinets and suitcases as possible key loot locations. These are random loot containers, not guaranteed or confirmed fixed key spawns.",
-    instructions:"Drag the map and pinch to zoom. Choose a tool and tap the map. Personal markers can be dragged.",
-    notice:"Community locations, no live tracking. Loot is not guaranteed. Extractions may have requirements. This source has no mission locations. Source details are shown in English.",
-    footer:"Unofficial fan project · Planning is stored in this browser",
-    keySource:"Key search: player reports",
-    loading:"Loading map and markers …",
-    missing:"Please upload a custom image for this map.",
-    failed:"Map image could not load. Please tap “Reload”.",
-    dataFailed:"Map loaded, but marker data is unavailable. Please tap “Reload”.",
-    ready:"Map and community markers loaded.",
-    customReady:"Custom map loaded. Community markers are hidden.",
-    saved:"Personal planning saved.",
-    saveFailed:"Saving failed. Changes last only until the page reloads.",
-    libraryFailed:"Map library could not load. Please reload the page.",
-    delete:"Remove marker",
-    confirmClear:"Delete all personal markers on this map?",
-    confirmImage:"Change the image and delete personal markers on this map?",
-    uploadFailed:"Please choose PNG, JPG or WebP under 15 MB.",
-    source:"Community data. Details may be outdated.",
-    own:"Personal marker · set manually",
-    visible:"visible community markers",
-    personal:"personal markers",
-    search:"Search: Safe, Motel, Key …",
-    noResults:"No results with the active filters.",
-    limited:"Showing the first 40 results.",
-    empty:"Load a map first.",
-    routePoint:"Route point",
-    custom:"Custom map",
-    keyHint:"Possible key loot location: random loot container. No guaranteed key. Based on community player reports, not a verified drop table.",
-    mapLabel:"Map",
-    ownImage:"custom image",
-    keyMode:"Key search"
-  }
+const words={
+de:{
+  planning:"Eigene Planung",
+  name:"Marker-Beschriftung",
+  inspect:"Karte ansehen",
+  player:"Meine Position",
+  note:"Notiz",
+  loot:"Loot",
+  exit:"Ausgang",
+  route:"Route setzen",
+  undo:"Zurück",
+  clearOwn:"Eigene Marker löschen",
+  upload:"Eigenes Kartenbild laden",
+  original:"Originalkarte verwenden",
+  filters:"Filter",
+  close:"Schließen",
+  showAll:"Alle zeigen",
+  hideAll:"Alle ausblenden",
+  fit:"Ganze Karte",
+  refresh:"Neu laden",
+  keys:"Schlüsseltüren",
+  spawns:"Spawnpunkte",
+  keyOff:"🔑 Schlüssel-Suche einschalten",
+  keyOn:"🔑 Schlüssel-Suche aktiv",
+  keyNotice:"Schlüssel-Suche zeigt Jacken, Aktenschränke und Koffer als mögliche Fundorte. Das sind zufällige Loot-Behälter, keine garantierten oder bestätigten festen Schlüssel-Spawns.",
+  instructions:"Karte verschieben und mit zwei Fingern zoomen. Werkzeug auswählen und auf die Karte tippen. Eigene Marker lassen sich verschieben.",
+  notice:"Community-Standorte, keine Live-Ortung. Loot ist nicht garantiert. Ausgänge können Bedingungen haben. Missionspunkte fehlen in dieser Quelle. Quelldetails erscheinen auf Englisch.",
+  footer:"Inoffizielles Fanprojekt · Planung wird in diesem Browser gespeichert",
+  keySource:"Schlüssel-Suche: Spielerberichte",
+  loading:"Karte und Marker werden geladen …",
+  missing:"Für diese Karte bitte ein eigenes Kartenbild hochladen.",
+  failed:"Kartenbild konnte nicht geladen werden. Bitte „Neu laden“ drücken.",
+  dataFailed:"Karte geladen, aber Markerdaten fehlen. Bitte „Neu laden“ drücken.",
+  ready:"Karte und Community-Marker geladen.",
+  customReady:"Eigenes Bild geladen. Community-Marker sind darauf ausgeblendet.",
+  saved:"Eigene Planung gespeichert.",
+  saveFailed:"Speichern fehlgeschlagen. Änderungen bleiben nur bis zum Neuladen erhalten.",
+  libraryFailed:"Kartenbibliothek nicht geladen. Bitte die Seite neu laden.",
+  delete:"Marker entfernen",
+  confirmClear:"Alle eigenen Marker dieser Karte löschen?",
+  confirmImage:"Kartenbild wechseln und eigene Marker dieser Karte löschen?",
+  uploadFailed:"Bitte PNG, JPG oder WebP unter 15 MB auswählen.",
+  source:"Community-Daten. Angaben können veraltet sein.",
+  own:"Eigener Marker · manuell gesetzt",
+  visible:"sichtbare Community-Marker",
+  personal:"eigene Marker",
+  search:"Suchen: Safe, Motel, Key …",
+  noResults:"Keine Treffer bei den aktiven Filtern.",
+  limited:"Die ersten 40 Treffer werden angezeigt.",
+  empty:"Lade zuerst eine Karte.",
+  routePoint:"Routenpunkt",
+  custom:"Eigene Karte",
+  keyHint:"Möglicher Schlüssel-Fundort: zufälliger Loot-Behälter. Kein garantierter Schlüssel. Grundlage: Community-Spielerberichte, keine verifizierte Drop-Tabelle.",
+  mapLabel:"Karte",
+  ownImage:"eigenes Bild",
+  keyMode:"Schlüssel-Suche"
+},
+en:{
+  planning:"Personal planning",
+  name:"Marker label",
+  inspect:"Explore map",
+  player:"My position",
+  note:"Note",
+  loot:"Loot",
+  exit:"Extraction",
+  route:"Add route point",
+  undo:"Undo",
+  clearOwn:"Clear personal markers",
+  upload:"Upload custom map",
+  original:"Use source map",
+  filters:"Filters",
+  close:"Close",
+  showAll:"Show all",
+  hideAll:"Hide all",
+  fit:"Fit map",
+  refresh:"Reload",
+  keys:"Key rooms",
+  spawns:"Spawn points",
+  keyOff:"🔑 Enable key search",
+  keyOn:"🔑 Key search active",
+  keyNotice:"Key search highlights jackets, filing cabinets and suitcases as possible key loot locations. These are random loot containers, not guaranteed or confirmed fixed key spawns.",
+  instructions:"Drag the map and pinch to zoom. Choose a tool and tap the map. Personal markers can be dragged.",
+  notice:"Community locations, no live tracking. Loot is not guaranteed. Extractions may have requirements. This source has no mission locations. Source details are shown in English.",
+  footer:"Unofficial fan project · Planning is stored in this browser",
+  keySource:"Key search: player reports",
+  loading:"Loading map and markers …",
+  missing:"Please upload a custom image for this map.",
+  failed:"Map image could not load. Please tap “Reload”.",
+  dataFailed:"Map loaded, but marker data is unavailable. Please tap “Reload”.",
+  ready:"Map and community markers loaded.",
+  customReady:"Custom map loaded. Community markers are hidden.",
+  saved:"Personal planning saved.",
+  saveFailed:"Saving failed. Changes last only until the page reloads.",
+  libraryFailed:"Map library could not load. Please reload the page.",
+  delete:"Remove marker",
+  confirmClear:"Delete all personal markers on this map?",
+  confirmImage:"Change the image and delete personal markers on this map?",
+  uploadFailed:"Please choose PNG, JPG or WebP under 15 MB.",
+  source:"Community data. Details may be outdated.",
+  own:"Personal marker · set manually",
+  visible:"visible community markers",
+  personal:"personal markers",
+  search:"Search: Safe, Motel, Key …",
+  noResults:"No results with the active filters.",
+  limited:"Showing the first 40 results.",
+  empty:"Load a map first.",
+  routePoint:"Route point",
+  custom:"Custom map",
+  keyHint:"Possible key loot location: random loot container. No guaranteed key. Based on community player reports, not a verified drop table.",
+  mapLabel:"Map",
+  ownImage:"custom image",
+  keyMode:"Key search"
+}
 };
 
-const german = {
+const german={
   "Player Spawn":"Spieler-Spawn",
   "Player spawn (Lockdown)":"Spieler-Spawn (Lockdown)",
   "Extraction Point":"Ausgänge",
@@ -592,7 +494,7 @@ const german = {
   "Switch":"Schalter"
 };
 
-const categoryIcons = {
+const categoryIcons={
   "Player Spawn":"Spawnicon.png",
   "Player spawn (Lockdown)":"Spawnicon.png",
   "Extraction Point":"Extracticon.png",
@@ -621,42 +523,39 @@ const categoryIcons = {
   "Switch":"ArmoryLever2.png"
 };
 
-const candidateNames = new Set(["Jacket","Filing Cabinet","Suitcase"]);
-const ownTypes = ["player","note","loot","exit","route"];
-const STORAGE = "abi-companion-planner-v1";
-const PREFS = "abi-interactive-preferences-v1";
-const dataCache = new Map();
-const media = window.matchMedia("(max-width:850px)");
+const candidateNames=new Set(["Jacket","Filing Cabinet","Suitcase"]);
+const ownTypes=["player","note","loot","exit","route"];
+const STORAGE="abi-companion-planner-v1";
+const PREFS="abi-interactive-preferences-v1";
+const dataCache=new Map();
+const media=window.matchMedia("(max-width:850px)");
 
-let lang="de", selected="farm", tool="inspect";
-let storedMaps={}, undoStacks={}, hidden=new Set();
-let keyMode=false, drawerOpen=false, loading=false;
-let leafletMap, imageLayer, communityLayer, ownLayer;
-let bounds=null, currentData=null, requestId=0;
+let lang="de",selected="farm",tool="inspect";
+let storedMaps={},undoStacks={},hidden=new Set();
+let keyMode=false,drawerOpen=false,loading=false;
+let leafletMap,imageLayer,communityLayer,ownLayer;
+let bounds=null,currentData=null,requestId=0;
 let statusKey="loading";
 
 try{
   const saved=JSON.parse(localStorage.getItem(STORAGE)||"null");
-
-  if(saved && typeof saved==="object"){
+  if(saved&&typeof saved==="object"){
     lang=saved.lang==="en"?"en":"de";
-
-    for(const [id,s] of Object.entries(saved.maps||{})){
-      if(!configs[id] || !s || typeof s!=="object") continue;
-
+    for(const [id,s]of Object.entries(saved.maps||{})){
+      if(!configs[id]||!s||typeof s!=="object")continue;
       storedMaps[id]={
-        image:typeof s.image==="string" &&
+        image:typeof s.image==="string"&&
           /^data:image\/(png|jpeg|webp);base64,/.test(s.image)
-            ? s.image : "",
-        ratio:Number.isFinite(s.ratio) && s.ratio>0 ? s.ratio : 1,
+          ?s.image:"",
+        ratio:Number.isFinite(s.ratio)&&s.ratio>0?s.ratio:1,
         markers:Array.isArray(s.markers)
-          ? s.markers.filter(m =>
-              m && ownTypes.includes(m.type) &&
-              typeof m.id==="string" &&
-              Number.isFinite(m.x) && Number.isFinite(m.y) &&
-              m.x>=0 && m.x<=100 && m.y>=0 && m.y<=100
-            ).map(m=>({...m,name:String(m.name||"").slice(0,80)}))
-          : []
+          ?s.markers.filter(m=>
+            m&&ownTypes.includes(m.type)&&
+            typeof m.id==="string"&&
+            Number.isFinite(m.x)&&Number.isFinite(m.y)&&
+            m.x>=0&&m.x<=100&&m.y>=0&&m.y<=100
+          ).map(m=>({...m,name:String(m.name||"").slice(0,80)}))
+          :[]
       };
     }
   }
@@ -664,15 +563,15 @@ try{
 
 try{
   const prefs=JSON.parse(localStorage.getItem(PREFS)||"{}");
-  if(configs[prefs.selected]) selected=prefs.selected;
+  if(configs[prefs.selected])selected=prefs.selected;
   if(Array.isArray(prefs.hidden)){
     hidden=new Set(prefs.hidden.filter(x=>typeof x==="string"));
   }
   keyMode=prefs.keyMode===true;
 }catch(e){}
 
-function t(key){return words[lang][key]||key;}
-function categoryName(name){return lang==="de"?german[name]||name:name;}
+function t(key){return words[lang][key]||key}
+function categoryName(name){return lang==="de"?german[name]||name:name}
 
 function state(){
   if(!storedMaps[selected]){
@@ -701,26 +600,20 @@ function save(){
     }));
     savePrefs();
     setStatus("saved");
-  }catch(e){
-    setStatus("saveFailed");
-  }
+  }catch(e){setStatus("saveFailed")}
 }
 
 function snapshot(){
-  const stack=undoStacks[selected] ||= [];
+  const stack=undoStacks[selected]||=[];
   stack.push(state().markers.map(m=>({...m})));
-  if(stack.length>30) stack.shift();
+  if(stack.length>30)stack.shift();
 }
 
 function updateDrawer(){
-  $("drawer").hidden=media.matches && !drawerOpen;
-  $("backdrop").hidden=!media.matches || !drawerOpen;
-  $("filterToggle").setAttribute(
-    "aria-expanded",String(media.matches && drawerOpen)
-  );
-  document.body.classList.toggle(
-    "drawer-open",media.matches && drawerOpen
-  );
+  $("drawer").hidden=media.matches&&!drawerOpen;
+  $("backdrop").hidden=!media.matches||!drawerOpen;
+  $("filterToggle").setAttribute("aria-expanded",String(media.matches&&drawerOpen));
+  document.body.classList.toggle("drawer-open",media.matches&&drawerOpen);
 }
 
 function closeDrawer(){
@@ -730,11 +623,9 @@ function closeDrawer(){
 
 function translate(){
   document.documentElement.lang=lang;
-
   document.querySelectorAll("[data-text]").forEach(el=>{
     el.textContent=t(el.dataset.text);
   });
-
   $("language").textContent=lang==="de"?"EN":"DE";
   $("search").placeholder=t("search");
   $("search").setAttribute("aria-label",t("search"));
@@ -742,13 +633,10 @@ function translate(){
   $("drawer").setAttribute("aria-label",t("planning")+" · "+t("filters"));
   $("backdrop").setAttribute("aria-label",t("close"));
   $("markerName").placeholder=lang==="de"?"z. B. Treffpunkt":"e.g. Meeting point";
-
   $("mapSelect").querySelector('[value="northridge"]').textContent=
     "Northridge · "+t("ownImage");
-
   $("mapSelect").querySelector('[value="custom"]').textContent=t("custom");
   $("mapTitle").textContent=selected==="custom"?t("custom"):configs[selected].name;
-
   $("keySearch").textContent=keyMode?t("keyOn"):t("keyOff");
   $("keySearch").setAttribute("aria-pressed",String(keyMode));
   $("status").textContent=t(statusKey);
@@ -759,7 +647,7 @@ function translate(){
     button.setAttribute("aria-pressed",String(active));
   });
 
-  $("original").hidden=!configs[selected].file || !state().image;
+  $("original").hidden=!configs[selected].file||!state().image;
   $("refresh").disabled=loading;
   $("undo").disabled=!(undoStacks[selected]?.length);
   $("clearOwn").disabled=!state().markers.length;
@@ -769,23 +657,18 @@ function translate(){
 function communityIcon(category,isCandidate){
   const wrapper=document.createElement("div");
   wrapper.className="hit";
-
-  const filename=keyMode && isCandidate
-    ? "Keysico.png"
-    : categoryIcons[category.name];
+  const filename=keyMode&&isCandidate?"Keysico.png":categoryIcons[category.name];
 
   if(filename){
     const image=document.createElement("img");
     image.src=ROOT+"icons/"+encodeURIComponent(filename);
     image.alt="";
     image.draggable=false;
-
     image.addEventListener("error",()=>{
       wrapper.replaceChildren();
       wrapper.textContent="●";
       wrapper.style.color="#ffb079";
     });
-
     wrapper.append(image);
   }else{
     wrapper.textContent="●";
@@ -793,11 +676,8 @@ function communityIcon(category,isCandidate){
   }
 
   return L.divIcon({
-    html:wrapper,
-    className:"small-map-icon",
-    iconSize:[28,28],
-    iconAnchor:[14,14],
-    popupAnchor:[0,-12]
+    html:wrapper,className:"small-map-icon",
+    iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-12]
   });
 }
 
@@ -807,7 +687,6 @@ function personalIcon(type,index){
     player:"#c2ee75",note:"#d6a3ff",loot:"#ffd369",
     exit:"#69caff",route:"#fff"
   };
-
   const wrapper=document.createElement("div");
   wrapper.className="hit";
   const dot=document.createElement("div");
@@ -833,7 +712,6 @@ function makePopup(title,description,category,personalId){
     paragraph.textContent=category;
     box.append(paragraph);
   }
-
   if(description){
     const paragraph=document.createElement("p");
     paragraph.textContent=description;
@@ -848,14 +726,12 @@ function makePopup(title,description,category,personalId){
     const button=document.createElement("button");
     button.type="button";
     button.textContent=t("delete");
-
     button.addEventListener("click",()=>{
       snapshot();
       state().markers=state().markers.filter(m=>m.id!==personalId);
       save();
       drawOwn();
     });
-
     box.append(document.createElement("br"),button);
   }
 
@@ -864,9 +740,7 @@ function makePopup(title,description,category,personalId){
 }
 
 function positionToLatLng(marker){
-  const sw=bounds.getSouthWest();
-  const ne=bounds.getNorthEast();
-
+  const sw=bounds.getSouthWest(),ne=bounds.getNorthEast();
   return [
     ne.lat-marker.y/100*(ne.lat-sw.lat),
     sw.lng+marker.x/100*(ne.lng-sw.lng)
@@ -874,14 +748,10 @@ function positionToLatLng(marker){
 }
 
 function latLngToPosition(latlng){
-  const sw=bounds.getSouthWest();
-  const ne=bounds.getNorthEast();
-
+  const sw=bounds.getSouthWest(),ne=bounds.getNorthEast();
   return {
-    x:Math.max(0,Math.min(100,
-      (latlng.lng-sw.lng)/(ne.lng-sw.lng)*100)),
-    y:Math.max(0,Math.min(100,
-      (ne.lat-latlng.lat)/(ne.lat-sw.lat)*100))
+    x:Math.max(0,Math.min(100,(latlng.lng-sw.lng)/(ne.lng-sw.lng)*100)),
+    y:Math.max(0,Math.min(100,(ne.lat-latlng.lat)/(ne.lat-sw.lat)*100))
   };
 }
 
@@ -894,67 +764,54 @@ function updateSummary(count){
 
 function buildFilters(){
   $("categories").replaceChildren();
-  if(!currentData) return;
+  if(!currentData)return;
 
   const counts=new Map();
-
   currentData.markers.forEach(marker=>{
     const id=String(marker.categoryId);
     counts.set(id,(counts.get(id)||0)+1);
   });
 
   currentData.categories.forEach(category=>{
-    if(keyMode && !candidateNames.has(category.name)) return;
-
+    if(keyMode&&!candidateNames.has(category.name))return;
     const label=document.createElement("label");
     const checkbox=document.createElement("input");
     checkbox.type="checkbox";
     checkbox.checked=!hidden.has(category.name);
-
     checkbox.addEventListener("change",()=>{
-      if(checkbox.checked) hidden.delete(category.name);
+      if(checkbox.checked)hidden.delete(category.name);
       else hidden.add(category.name);
       savePrefs();
       drawCommunity();
     });
-
     label.append(
       checkbox,
-      document.createTextNode(
-        categoryName(category.name)+" ("+
-        (counts.get(String(category.id))||0)+")"
-      )
+      document.createTextNode(categoryName(category.name)+" ("+
+        (counts.get(String(category.id))||0)+")")
     );
-
     $("categories").append(label);
   });
 }
 
 function drawCommunity(){
-  if(!communityLayer) return;
-
+  if(!communityLayer)return;
   communityLayer.clearLayers();
   $("results").replaceChildren();
-
   const query=$("search").value.trim().toLowerCase();
   const matches=[];
   let count=0;
 
-  if(currentData && !state().image && imageLayer){
-    const cats=new Map(
-      currentData.categories.map(c=>[String(c.id),c])
-    );
-
+  if(currentData&&!state().image&&imageLayer){
+    const cats=new Map(currentData.categories.map(c=>[String(c.id),c]));
     currentData.markers.forEach(markerData=>{
       const category=cats.get(String(markerData.categoryId));
-      if(!category || hidden.has(category.name)) return;
+      if(!category||hidden.has(category.name))return;
 
       const candidate=candidateNames.has(category.name);
-      if(keyMode && !candidate) return;
+      if(keyMode&&!candidate)return;
 
       const title=String(markerData.popup?.title||category.name);
       let description=String(markerData.popup?.description||"");
-
       if(keyMode){
         description=t("keyHint")+(description?"\n\n"+description:"");
       }
@@ -962,14 +819,10 @@ function drawCommunity(){
       const searchable=[
         title,description,category.name,categoryName(category.name)
       ].join(" ").toLowerCase();
+      if(query&&!searchable.includes(query))return;
 
-      if(query && !searchable.includes(query)) return;
-
-      const latlng=L.latLng(
-        markerData.position[1],markerData.position[0]
-      );
-
-      if(!bounds.contains(latlng)) return;
+      const latlng=L.latLng(markerData.position[1],markerData.position[0]);
+      if(!bounds.contains(latlng))return;
 
       const marker=L.marker(latlng,{
         icon:communityIcon(category,candidate),
@@ -980,7 +833,7 @@ function drawCommunity(){
       ).addTo(communityLayer);
 
       count++;
-      if(query) matches.push({title,category,marker});
+      if(query)matches.push({title,category,marker});
     });
   }
 
@@ -989,84 +842,65 @@ function drawCommunity(){
       const button=document.createElement("button");
       button.type="button";
       button.textContent=categoryName(item.category.name)+" · "+item.title;
-
       button.addEventListener("click",()=>{
         closeDrawer();
-        leafletMap.setView(
-          item.marker.getLatLng(),
-          Math.max(leafletMap.getZoom(),-1)
-        );
+        leafletMap.setView(item.marker.getLatLng(),Math.max(leafletMap.getZoom(),-1));
         item.marker.openPopup();
       });
-
       $("results").append(button);
     });
 
-    if(!matches.length || matches.length>40){
+    if(!matches.length||matches.length>40){
       const paragraph=document.createElement("p");
       paragraph.className="help";
       paragraph.textContent=matches.length?t("limited"):t("noResults");
       $("results").append(paragraph);
     }
   }
-
   updateSummary(count);
 }
 
 function drawOwn(){
-  if(!ownLayer) return;
+  if(!ownLayer)return;
   ownLayer.clearLayers();
   translate();
-
-  if(!bounds || !imageLayer){
+  if(!bounds||!imageLayer){
     drawCommunity();
     return;
   }
 
   const route=state().markers.filter(m=>m.type==="route");
-
   if(route.length>1){
     L.polyline(route.map(positionToLatLng),{
-      color:"#ff963f",
-      weight:3,
-      dashArray:"8 6",
-      interactive:false
+      color:"#ff963f",weight:3,dashArray:"8 6",interactive:false
     }).addTo(ownLayer);
   }
 
   state().markers.forEach(markerData=>{
     const index=route.findIndex(r=>r.id===markerData.id)+1;
-    const title=markerData.name || (
-      markerData.type==="route"
-        ? t("routePoint")+" "+index
-        : t(markerData.type)
-    );
+    const title=markerData.name||
+      (markerData.type==="route"?t("routePoint")+" "+index:t(markerData.type));
 
     const marker=L.marker(positionToLatLng(markerData),{
       icon:personalIcon(markerData.type,index),
-      title,
-      draggable:true,
-      zIndexOffset:1000,
+      title,draggable:true,zIndexOffset:1000,
       bubblingMouseEvents:false
     }).bindPopup(
       makePopup(title,"",t(markerData.type),markerData.id)
     ).addTo(ownLayer);
 
     marker.on("dragstart",snapshot);
-
     marker.on("dragend",()=>{
       Object.assign(markerData,latLngToPosition(marker.getLatLng()));
       save();
       drawOwn();
     });
   });
-
   drawCommunity();
 }
 
 async function fetchData(file,force){
-  if(dataCache.has(file) && !force) return dataCache.get(file);
-
+  if(dataCache.has(file)&&!force)return dataCache.get(file);
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),25000);
 
@@ -1076,70 +910,57 @@ async function fetchData(file,force){
       (force?"?refresh="+Date.now():""),
       {signal:controller.signal}
     );
-
-    if(!response.ok) throw new Error("Data unavailable");
+    if(!response.ok)throw new Error("Data unavailable");
     const data=await response.json();
 
     if(
-      data.origin!=="bottom-left" ||
-      data.coordinateOrder!=="xy" ||
-      !Array.isArray(data.categories) ||
-      !Array.isArray(data.markers) ||
-      !Array.isArray(data.mapBounds) ||
-      data.mapBounds.length!==2 ||
+      data.origin!=="bottom-left"||
+      data.coordinateOrder!=="xy"||
+      !Array.isArray(data.categories)||
+      !Array.isArray(data.markers)||
+      !Array.isArray(data.mapBounds)||
+      data.mapBounds.length!==2||
       !data.mapBounds.every(p=>
-        Array.isArray(p) && p.length===2 && p.every(Number.isFinite)
-      ) ||
-      data.mapBounds[1][0]<=data.mapBounds[0][0] ||
+        Array.isArray(p)&&p.length===2&&p.every(Number.isFinite))||
+      data.mapBounds[1][0]<=data.mapBounds[0][0]||
       data.mapBounds[1][1]<=data.mapBounds[0][1]
-    ) throw new Error("Invalid map data");
+    )throw new Error("Invalid map data");
 
     data.categories=data.categories.filter(c=>
-      c && c.id!=null && typeof c.name==="string"
-    );
-
+      c&&c.id!=null&&typeof c.name==="string");
     data.markers=data.markers.filter(m=>
-      m && Array.isArray(m.position) &&
-      m.position.length===2 && m.position.every(Number.isFinite)
-    );
+      m&&Array.isArray(m.position)&&m.position.length===2&&
+      m.position.every(Number.isFinite));
 
     dataCache.set(file,data);
     return data;
-  }finally{
-    clearTimeout(timer);
-  }
+  }finally{clearTimeout(timer)}
 }
 
 function preloadImage(url){
   return new Promise((resolve,reject)=>{
     const image=new Image();
-
     const timer=setTimeout(()=>{
       image.onload=image.onerror=null;
       image.src="";
       reject(new Error("Image timeout"));
     },60000);
-
     image.onload=()=>{
       clearTimeout(timer);
       resolve(image);
     };
-
     image.onerror=()=>{
       clearTimeout(timer);
       reject(new Error("Image unavailable"));
     };
-
     image.src=url;
   });
 }
 
 async function loadSelected(force=false){
-  if(!leafletMap) return;
-
+  if(!leafletMap)return;
   const token=++requestId;
-  const s=state();
-  const config=configs[selected];
+  const s=state(),config=configs[selected];
 
   loading=true;
   currentData=null;
@@ -1149,22 +970,17 @@ async function loadSelected(force=false){
     leafletMap.removeLayer(imageLayer);
     imageLayer=null;
   }
-
   communityLayer.clearLayers();
   ownLayer.clearLayers();
   leafletMap.closePopup();
   leafletMap.setMaxBounds(null);
-
   $("categories").replaceChildren();
   $("results").replaceChildren();
   updateSummary(0);
   setStatus("loading");
   translate();
 
-  const imageUrl=s.image || (
-    config.file?ROOT+"maps/"+config.file+".png":""
-  );
-
+  const imageUrl=s.image||(config.file?ROOT+"maps/"+config.file+".png":"");
   if(!imageUrl){
     loading=false;
     setStatus("missing");
@@ -1174,13 +990,10 @@ async function loadSelected(force=false){
 
   const results=await Promise.allSettled([
     preloadImage(imageUrl),
-    config.file && !s.image
-      ? fetchData(config.file,force)
-      : Promise.resolve(null)
+    config.file&&!s.image?fetchData(config.file,force):Promise.resolve(null)
   ]);
 
-  if(token!==requestId) return;
-
+  if(token!==requestId)return;
   loading=false;
 
   if(results[0].status!=="fulfilled"){
@@ -1190,9 +1003,7 @@ async function loadSelected(force=false){
   }
 
   const image=results[0].value;
-  const data=results[1].status==="fulfilled"
-    ? results[1].value:null;
-
+  const data=results[1].status==="fulfilled"?results[1].value:null;
   currentData=data;
 
   if(data){
@@ -1200,27 +1011,23 @@ async function loadSelected(force=false){
     bounds=L.latLngBounds([y0,x0],[y1,x1]);
   }else{
     bounds=L.latLngBounds(
-      [0,0],
-      [1080,1080*image.naturalWidth/image.naturalHeight]
+      [0,0],[1080,1080*image.naturalWidth/image.naturalHeight]
     );
   }
 
   imageLayer=L.imageOverlay(imageUrl,bounds,{
-    interactive:false,
-    alt:config.name
+    interactive:false,alt:config.name
   }).addTo(leafletMap);
 
   imageLayer.on("error",()=>{
-    if(token===requestId) setStatus("failed");
+    if(token===requestId)setStatus("failed");
   });
 
   leafletMap.setMaxBounds(bounds.pad(.25));
   leafletMap.invalidateSize();
   leafletMap.fitBounds(bounds,{padding:[12,12],animate:false});
-
   buildFilters();
   drawOwn();
-
   setStatus(s.image?"customReady":data?"ready":"dataFailed");
   translate();
 }
@@ -1234,7 +1041,6 @@ $("language").addEventListener("click",()=>{
 });
 
 $("mapSelect").value=selected;
-
 $("mapSelect").addEventListener("change",()=>{
   selected=$("mapSelect").value;
   savePrefs();
@@ -1244,7 +1050,7 @@ $("mapSelect").addEventListener("change",()=>{
 $("filterToggle").addEventListener("click",()=>{
   drawerOpen=!drawerOpen;
   updateDrawer();
-  if(drawerOpen) $("drawerClose").focus();
+  if(drawerOpen)$("drawerClose").focus();
 });
 
 $("drawerClose").addEventListener("click",()=>{
@@ -1255,7 +1061,7 @@ $("drawerClose").addEventListener("click",()=>{
 $("backdrop").addEventListener("click",closeDrawer);
 
 document.addEventListener("keydown",event=>{
-  if(event.key==="Escape" && drawerOpen){
+  if(event.key==="Escape"&&drawerOpen){
     closeDrawer();
     $("filterToggle").focus();
   }
@@ -1263,27 +1069,25 @@ document.addEventListener("keydown",event=>{
 
 media.addEventListener("change",()=>{
   updateDrawer();
-  if(leafletMap) leafletMap.invalidateSize({pan:false});
+  if(leafletMap)leafletMap.invalidateSize({pan:false});
 });
 
 document.querySelectorAll("[data-tool]").forEach(button=>{
   button.addEventListener("click",()=>{
     tool=button.dataset.tool;
     translate();
-    if(media.matches) closeDrawer();
+    if(media.matches)closeDrawer();
   });
 });
 
-$("search").addEventListener("input",drawCommunity);
+$("search").addEventListener("input",()=>drawCommunity());
 
 $("keySearch").addEventListener("click",()=>{
   keyMode=!keyMode;
-
   if(keyMode){
     candidateNames.forEach(name=>hidden.delete(name));
     $("search").value="";
   }
-
   savePrefs();
   translate();
   buildFilters();
@@ -1291,9 +1095,8 @@ $("keySearch").addEventListener("click",()=>{
 });
 
 $("showAll").addEventListener("click",()=>{
-  if(keyMode) candidateNames.forEach(name=>hidden.delete(name));
+  if(keyMode)candidateNames.forEach(name=>hidden.delete(name));
   else hidden.clear();
-
   savePrefs();
   buildFilters();
   drawCommunity();
@@ -1301,11 +1104,10 @@ $("showAll").addEventListener("click",()=>{
 
 $("hideAll").addEventListener("click",()=>{
   currentData?.categories.forEach(category=>{
-    if(!keyMode || candidateNames.has(category.name)){
+    if(!keyMode||candidateNames.has(category.name)){
       hidden.add(category.name);
     }
   });
-
   savePrefs();
   buildFilters();
   drawCommunity();
@@ -1314,23 +1116,21 @@ $("hideAll").addEventListener("click",()=>{
 $("refresh").addEventListener("click",()=>loadSelected(true));
 
 $("fit").addEventListener("click",()=>{
-  if(bounds && leafletMap){
+  if(bounds&&leafletMap){
     leafletMap.fitBounds(bounds,{padding:[12,12]});
   }
 });
 
 $("undo").addEventListener("click",()=>{
   const stack=undoStacks[selected];
-  if(!stack?.length) return;
-
+  if(!stack?.length)return;
   state().markers=stack.pop();
   save();
   drawOwn();
 });
 
 $("clearOwn").addEventListener("click",()=>{
-  if(!state().markers.length || !confirm(t("confirmClear"))) return;
-
+  if(!state().markers.length||!confirm(t("confirmClear")))return;
   snapshot();
   state().markers=[];
   save();
@@ -1338,13 +1138,11 @@ $("clearOwn").addEventListener("click",()=>{
 });
 
 $("original").addEventListener("click",()=>{
-  if(!configs[selected].file || !state().image) return;
-  if(state().markers.length && !confirm(t("confirmImage"))) return;
-
+  if(!configs[selected].file||!state().image)return;
+  if(state().markers.length&&!confirm(t("confirmImage")))return;
   state().image="";
   state().markers=[];
   undoStacks[selected]=[];
-
   save();
   closeDrawer();
   loadSelected();
@@ -1353,34 +1151,23 @@ $("original").addEventListener("click",()=>{
 $("upload").addEventListener("change",async event=>{
   const file=event.target.files[0];
   event.target.value="";
-
-  if(!file) return;
-
-  if(
-    !["image/png","image/jpeg","image/webp"].includes(file.type) ||
-    file.size>15*1024*1024
-  ){
+  if(!file)return;
+  if(!["image/png","image/jpeg","image/webp"].includes(file.type)||
+    file.size>15*1024*1024){
     setStatus("uploadFailed");
     return;
   }
 
-  const target=selected;
-  const s=state();
-
-  if(s.markers.length && !confirm(t("confirmImage"))) return;
-
+  const target=selected,s=state();
+  if(s.markers.length&&!confirm(t("confirmImage")))return;
   const url=URL.createObjectURL(file);
 
   try{
     const image=await preloadImage(url);
-    const scale=Math.min(
-      1,1800/Math.max(image.naturalWidth,image.naturalHeight)
-    );
-
+    const scale=Math.min(1,1800/Math.max(image.naturalWidth,image.naturalHeight));
     const canvas=document.createElement("canvas");
     canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
     canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
-
     const context=canvas.getContext("2d");
     context.fillStyle="#101613";
     context.fillRect(0,0,canvas.width,canvas.height);
@@ -1391,7 +1178,6 @@ $("upload").addEventListener("change",async event=>{
       ratio:canvas.width/canvas.height,
       markers:[]
     };
-
     undoStacks[target]=[];
     save();
 
@@ -1401,9 +1187,7 @@ $("upload").addEventListener("change",async event=>{
     }
   }catch(e){
     setStatus("uploadFailed");
-  }finally{
-    URL.revokeObjectURL(url);
-  }
+  }finally{URL.revokeObjectURL(url)}
 });
 
 translate();
@@ -1413,43 +1197,31 @@ if(typeof L==="undefined"){
 }else{
   leafletMap=L.map("map",{
     crs:L.CRS.Simple,
-    minZoom:-6,
-    maxZoom:3,
-    zoomSnap:.25,
-    zoomDelta:.5,
-    scrollWheelZoom:true,
-    touchZoom:true,
-    dragging:true,
-    doubleClickZoom:false,
-    maxBoundsViscosity:.8
+    minZoom:-6,maxZoom:3,zoomSnap:.25,zoomDelta:.5,
+    scrollWheelZoom:true,touchZoom:true,dragging:true,
+    doubleClickZoom:false,maxBoundsViscosity:.8
   }).setView([540,960],-2);
 
   communityLayer=L.layerGroup().addTo(leafletMap);
   ownLayer=L.layerGroup().addTo(leafletMap);
 
   leafletMap.on("click",event=>{
-    if(tool==="inspect") return;
-
-    if(!bounds || !imageLayer){
+    if(tool==="inspect")return;
+    if(!bounds||!imageLayer){
       setStatus("empty");
       return;
     }
-
-    if(!bounds.contains(event.latlng)) return;
-
+    if(!bounds.contains(event.latlng))return;
     snapshot();
-
     if(tool==="player"){
       state().markers=state().markers.filter(m=>m.type!=="player");
     }
-
     state().markers.push({
       id:Date.now().toString(36)+Math.random().toString(36).slice(2),
       type:tool,
       name:$("markerName").value.trim(),
       ...latLngToPosition(event.latlng)
     });
-
     save();
     drawOwn();
   });
@@ -1463,14 +1235,12 @@ if(typeof L==="undefined"){
   loadSelected();
 }
 </script>
+
 <script>
 (function(){
 "use strict";
-
 if(window.abiRaidPlanner)return;
-if(typeof configs==="undefined"||
-   typeof drawCommunity!=="function")return;
-
+if(typeof configs==="undefined"||typeof drawCommunity!=="function")return;
 window.abiRaidPlanner=true;
 
 const KEY="abi-raid-plans-v1";
@@ -1478,406 +1248,238 @@ const el=id=>document.getElementById("rp"+id);
 const uid=()=>crypto.randomUUID?.()||
   Date.now().toString(36)+Math.random().toString(36).slice(2);
 const text=(v,n=120)=>typeof v==="string"?v.slice(0,n):"";
-
 const defaults=[
-  "Medikamente",
-  "Schmerzmittel",
-  "Verbände",
-  "Munition und Magazine",
-  "Rüstung und Helm",
-  "Rucksack",
-  "Benötigte Schlüssel"
+  "Medikamente","Schmerzmittel","Verbände",
+  "Munition und Magazine","Rüstung und Helm",
+  "Rucksack","Benötigte Schlüssel"
 ];
 
 function cleanPlan(p){
   p=p&&typeof p==="object"?p:{};
-
   return {
     id:text(p.id),
     name:text(p.name)||"Mein Raid",
     map:configs[p.map]?p.map:"farm",
-    goal:text(p.goal)||"Safes looten",
+    goal:p.goal==="Schlüssel suchen"
+      ?"Schlüssel looten":text(p.goal)||"Safes looten",
     build:text(p.build),
     armor:text(p.armor),
     ammo:text(p.ammo),
     notes:text(p.notes,1500),
-
+    stops:[3,5,8].includes(p.stops)?p.stops:5,
+    exit:text(p.exit),
     route:(Array.isArray(p.route)?p.route:[])
-      .filter(x=>
-        x&&Number.isFinite(x.x)&&Number.isFinite(x.y)&&
-        x.x>=0&&x.x<=100&&x.y>=0&&x.y<=100
-      )
+      .filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)&&
+        x.x>=0&&x.x<=100&&x.y>=0&&x.y<=100)
       .slice(0,150)
-      .map(x=>({
-        x:x.x,
-        y:x.y,
-        name:text(x.name)||"Routenpunkt"
-      })),
-
+      .map(x=>({x:x.x,y:x.y,name:text(x.name)||"Routenpunkt"})),
     checks:(Array.isArray(p.checks)
-      ?p.checks
-      :defaults.map(label=>({label,done:false})))
-      .filter(x=>
-        x&&typeof x.label==="string"&&x.label.trim()
-      )
+      ?p.checks:defaults.map(label=>({label,done:false})))
+      .filter(x=>x&&typeof x.label==="string"&&x.label.trim())
       .slice(0,30)
-      .map(x=>({
-        label:text(x.label),
-        done:x.done===true
-      }))
+      .map(x=>({label:text(x.label),done:x.done===true}))
   };
 }
 
 let stored={};
-
-try{
-  stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{};
-}catch(e){}
-
+try{stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 let plans=(Array.isArray(stored.plans)?stored.plans:[])
   .slice(0,30).map(cleanPlan);
-
 let draft=cleanPlan(stored.draft||{map:selected});
-let editing=false;
-let layer=null;
-let frame=null;
-let catalog=[];
+let editing=false,layer=null,frame=null,catalog=[];
 
 function cleanBuilds(rows){
   return (Array.isArray(rows)?rows:[])
-    .filter(b=>
-      b&&typeof b.id==="string"&&typeof b.name==="string"
-    )
+    .filter(b=>b&&typeof b.id==="string"&&typeof b.name==="string")
     .slice(0,250)
     .map(b=>({
-      id:text(b.id),
-      name:text(b.name),
-      weapon:text(b.weapon),
-      code:text(b.code,500),
-      warning:text(b.warning,500),
+      id:text(b.id),name:text(b.name),weapon:text(b.weapon),
+      code:text(b.code,500),warning:text(b.warning,500),
       parts:(Array.isArray(b.parts)?b.parts:[])
-        .filter(p=>
-          Array.isArray(p)&&p.length===2&&
-          p.every(x=>typeof x==="string")
-        )
-        .slice(0,50)
-        .map(p=>p.map(x=>text(x,300)))
+        .filter(p=>Array.isArray(p)&&p.length===2&&
+          p.every(x=>typeof x==="string"))
+        .slice(0,50).map(p=>p.map(x=>text(x,300)))
     }));
 }
-
 catalog=cleanBuilds(stored.catalog);
 
 const style=document.createElement("style");
-
 style.textContent=`
 #rpPanel{
-  max-width:1200px;
-  margin:18px auto;
-  padding:22px;
-  background:
-    linear-gradient(135deg,#171d22ed,#0b0e11ed),
+  max-width:1200px;margin:18px auto;padding:22px;
+  background:linear-gradient(135deg,#171d22ed,#0b0e11ed),
     url('./armor-texture.PNG') center/cover;
-  border:2px solid #60696f;
-  border-radius:8px;
-  color:#eee;
-  box-shadow:
-    inset 0 1px 0 #aab4ba55,
-    0 8px 30px #0008;
+  border:2px solid #60696f;border-radius:8px;color:#eee;
+  box-shadow:inset 0 1px 0 #aab4ba55,0 8px 30px #0008;
 }
-#rpPanel[hidden],#rpMapBar[hidden]{
-  display:none!important;
-}
-#rpPanel h2{
-  margin:0;
-  color:#ff9c4c;
-}
-#rpPanel p{
-  line-height:1.5;
-}
-#rpPanel label{
-  display:block;
-  color:#c9d0d5;
-}
+#rpPanel[hidden],#rpMapBar[hidden]{display:none!important}
+#rpPanel h2{margin:0;color:#ff9c4c}
+#rpPanel p{line-height:1.5}
+#rpPanel label{display:block;color:#c9d0d5}
 .rpGrid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
 }
-.rpWide{
-  grid-column:1/-1;
+.rpWide{grid-column:1/-1}
+#rpPanel input:not([type=checkbox]),#rpPanel select,#rpPanel textarea{
+  display:block;box-sizing:border-box;width:100%;min-height:46px;
+  margin-top:6px;padding:10px;background:#10161a;color:#fff;
+  border:1px solid #69757c;border-radius:5px;font:inherit;
 }
-#rpPanel input:not([type=checkbox]),
-#rpPanel select,
-#rpPanel textarea{
-  display:block;
-  box-sizing:border-box;
-  width:100%;
-  min-height:46px;
-  margin-top:6px;
-  padding:10px;
-  background:#10161a;
-  color:#fff;
-  border:1px solid #69757c;
-  border-radius:5px;
-  font:inherit;
-}
-#rpPanel textarea{
-  resize:vertical;
-}
-.rpActions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin:12px 0;
-}
+#rpPanel textarea{resize:vertical}
+.rpActions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 #rpPanel button,#rpMapBar button{
-  min-height:44px;
-  padding:9px 13px;
-  font:inherit;
-  cursor:pointer;
-  background:#273139;
-  color:#fff;
-  border:1px solid #78848c;
-  border-radius:5px;
+  min-height:44px;padding:9px 13px;font:inherit;cursor:pointer;
+  background:#273139;color:#fff;border:1px solid #78848c;border-radius:5px;
 }
 .rpOrange{
-  background:#ed812f!important;
-  color:#130c06!important;
-  font-weight:bold;
+  background:#ed812f!important;color:#130c06!important;font-weight:bold;
 }
-#rpChecks label{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  margin:8px 0;
-}
-#rpChecks input{
-  width:22px;
-  height:22px;
-  accent-color:#ff963f;
-}
-#rpChecks button{
-  margin-left:auto;
-}
-#rpRouteList{
-  padding-left:26px;
-}
-#rpRouteList li{
-  padding:6px 0;
-}
-#rpRouteList button{
-  min-width:40px;
-  margin-left:5px;
-  padding:5px 9px;
-}
-#rpParts{
-  white-space:pre-wrap;
-  line-height:1.6;
-}
-#rpStatus{
-  color:#ffd2ae;
-  min-height:24px;
-}
-.rpMuted{
-  color:#b3bdc3;
-  font-size:.92rem;
-}
+#rpChecks label{display:flex;gap:10px;align-items:center;margin:8px 0}
+#rpChecks input{width:22px;height:22px;accent-color:#ff963f}
+#rpChecks button{margin-left:auto}
+#rpRouteList{padding-left:26px}
+#rpRouteList li{padding:6px 0}
+#rpRouteList button{min-width:40px;margin-left:5px;padding:5px 9px}
+#rpParts{white-space:pre-wrap;line-height:1.6}
+#rpStatus{color:#ffd2ae;min-height:24px}
+.rpMuted{color:#b3bdc3;font-size:.92rem}
 #rpMapBar{
-  position:fixed;
-  bottom:18px;
-  left:12px;
-  right:12px;
-  max-width:700px;
-  margin:auto;
-  z-index:1100;
-  background:#161c20f5;
-  border:1px solid #ff963f;
-  padding:10px 14px;
-  border-radius:8px;
-  display:flex;
-  gap:12px;
-  align-items:center;
-  justify-content:space-between;
-  color:white;
-  box-shadow:0 4px 24px #000;
+  position:fixed;bottom:18px;left:12px;right:12px;
+  max-width:700px;margin:auto;z-index:1100;background:#161c20f5;
+  border:1px solid #ff963f;padding:10px 14px;border-radius:8px;
+  display:flex;gap:12px;align-items:center;justify-content:space-between;
+  color:white;box-shadow:0 4px 24px #000;
 }
 .rpPoint{
-  width:24px;
-  height:24px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:#ff963f;
-  color:#15100b;
-  border:2px solid #fff;
-  font:bold 12px Arial;
-  box-shadow:0 2px 5px #0009;
+  width:24px;height:24px;border-radius:50%;
+  display:grid;place-items:center;background:#ff963f;color:#15100b;
+  border:2px solid #fff;font:bold 12px Arial;box-shadow:0 2px 5px #0009;
 }
 @media(max-width:650px){
-  #rpPanel{
-    margin:12px;
-    padding:15px;
-  }
-  .rpGrid{
-    grid-template-columns:1fr;
-  }
-  .rpWide{
-    grid-column:auto;
-  }
+  #rpPanel{margin:12px;padding:15px}
+  .rpGrid{grid-template-columns:1fr}
+  .rpWide{grid-column:auto}
 }
 `;
-
 document.head.append(style);
 
 const panel=document.createElement("section");
 panel.id="rpPanel";
 panel.hidden=true;
-
 panel.innerHTML=`
 <h2>RAID-PLANER</h2>
-
 <p class="rpMuted">
   Karte, Ausrüstung und Route vorbereiten.
-  Die Route ist deine Planung; sie berücksichtigt keine
-  Gefahren oder Ausgangsbedingungen automatisch.
+  Gefahren und Ausgangsbedingungen werden nicht automatisch geprüft.
 </p>
 
 <div class="rpActions">
   <button id="rpNew" type="button">Neuer Plan</button>
-  <button id="rpSave" class="rpOrange" type="button">
-    Plan speichern
-  </button>
-  <button id="rpDelete" type="button">
-    Gespeicherten Plan löschen
-  </button>
+  <button id="rpSave" class="rpOrange" type="button">Plan speichern</button>
+  <button id="rpDelete" type="button">Gespeicherten Plan löschen</button>
   <button id="rpClose" type="button">Schließen</button>
 </div>
 
-<label>
-  Gespeicherten Plan öffnen
-  <select id="rpSaved">
-    <option value="">Plan auswählen …</option>
-  </select>
+<label>Gespeicherten Plan öffnen
+  <select id="rpSaved"><option value="">Plan auswählen …</option></select>
 </label>
-
 <p id="rpStatus" role="status" aria-live="polite"></p>
 
 <div class="rpGrid">
-  <label>
-    Name
-    <input id="rpName" maxlength="120">
-  </label>
-
-  <label>
-    Karte
-    <select id="rpMap"></select>
-  </label>
-
-  <label>
-    Raid-Ziel
+  <label>Name<input id="rpName" maxlength="120"></label>
+  <label>Karte<select id="rpMap"></select></label>
+  <label>Raid-Ziel
     <select id="rpGoal">
       <option>Safes looten</option>
-      <option>Schlüssel suchen</option>
+      <option>Schlüssel looten</option>
+      <option>Waffenkisten looten</option>
       <option>Mission erledigen</option>
       <option>PvP</option>
       <option>Eigene Route</option>
     </select>
   </label>
-
-  <label>
-    Waffen-Build
-    <select id="rpBuild">
-      <option value="">Ohne Build</option>
-    </select>
+  <label>Waffen-Build
+    <select id="rpBuild"><option value="">Ohne Build</option></select>
   </label>
 
   <div class="rpWide">
     <div class="rpActions">
-      <button id="rpLoadBuilds" type="button">
-        Buildliste laden / aktualisieren
-      </button>
+      <button id="rpLoadBuilds" type="button">Buildliste laden / aktualisieren</button>
       <a href="./waffen.html">Zur Waffenwerkbank</a>
     </div>
-
     <p id="rpBuildInfo" class="rpMuted"></p>
-
     <details>
       <summary>Aufsätze des gewählten Builds</summary>
       <div id="rpParts"></div>
     </details>
-
     <div class="rpActions">
-      <button id="rpCopy" type="button">
-        Importcode kopieren
-      </button>
+      <button id="rpCopy" type="button">Importcode kopieren</button>
     </div>
-
     <code id="rpCode" style="overflow-wrap:anywhere"></code>
   </div>
 
-  <label>
-    Rüstung und Helm
-    <input id="rpArmor" maxlength="120"
-      placeholder="Eigene Ausrüstung eintragen">
+  <label>Rüstung und Helm
+    <input id="rpArmor" maxlength="120" placeholder="Eigene Ausrüstung eintragen">
   </label>
-
-  <label>
-    Munition
-    <input id="rpAmmo" maxlength="120"
-      placeholder="Typ und Menge eintragen">
+  <label>Munition
+    <input id="rpAmmo" maxlength="120" placeholder="Typ und Menge eintragen">
   </label>
-
-  <label class="rpWide">
-    Mission / Notizen
+  <label class="rpWide">Mission / Notizen
     <textarea id="rpNotes" rows="3" maxlength="1500"
       placeholder="Benötigte Schlüssel, Ausgangsbedingungen …"></textarea>
   </label>
 </div>
 
 <h3>Raid-Checkliste</h3>
-
 <div id="rpChecks"></div>
-
-<label>
-  Eigener Checkpunkt
-  <input id="rpNewCheck" maxlength="120"
-    placeholder="z. B. Motel-Schlüssel">
+<label>Eigener Checkpunkt
+  <input id="rpNewCheck" maxlength="120" placeholder="z. B. Motel-Schlüssel">
 </label>
-
 <div class="rpActions">
-  <button id="rpAddCheck" type="button">
-    Checkpunkt hinzufügen
-  </button>
+  <button id="rpAddCheck" type="button">Checkpunkt hinzufügen</button>
 </div>
 
-<h3>Geplante Route</h3>
+<h3>Automatische Lootroute</h3>
+<div class="rpGrid">
+  <label>Nahe Lootstopps
+    <select id="rpStops">
+      <option value="3">3 Stopps · kurze Runde</option>
+      <option value="5">5 Stopps · Standard</option>
+      <option value="8">8 Stopps · längere Runde</option>
+    </select>
+  </label>
+  <label>Optionaler Ausgang
+    <select id="rpExit"><option value="">Ohne Ausgang</option></select>
+  </label>
+  <label class="rpWide">Spawn alternativ aus Liste wählen
+    <select id="rpSpawn"><option value="">Spawn auswählen …</option></select>
+  </label>
+</div>
 
+<p id="rpAutoHint" class="rpMuted"></p>
 <p class="rpMuted">
-  Routenmodus einschalten und Marker oder freie Stellen
-  auf der Karte antippen. Die Nummern zeigen die Reihenfolge.
-  Die Linie ist keine geprüfte Laufstrecke.
+  Lootziel wählen und Spawn auf der Karte antippen.
+  Die App verbindet nahe Fundstellen in einer kurzen Reihenfolge.
+  Gestrichelte Luftlinien berücksichtigen keine Mauern,
+  Durchgänge oder Gefahren. Ausgangsbedingungen selbst prüfen.
 </p>
 
 <div class="rpActions">
-  <button id="rpEditRoute" class="rpOrange" type="button">
-    Route auf Karte wählen
-  </button>
+  <button id="rpEditRoute" class="rpOrange" type="button">Spawn auf Karte wählen</button>
+  <button id="rpFromSpawn" type="button">Route vom Listen-Spawn berechnen</button>
   <button id="rpClearRoute" type="button">Route leeren</button>
 </div>
-
 <ol id="rpRouteList"></ol>
 
 <p class="rpMuted">
-  Dein Entwurf wird auf diesem Gerät automatisch
-  zwischengespeichert. Mit „Plan speichern“ legst du ihn
-  zusätzlich in deiner Planliste ab.
+  Dein Entwurf wird auf diesem Gerät automatisch zwischengespeichert.
+  Mit „Plan speichern“ legst du ihn zusätzlich in deiner Planliste ab.
   Keine Kontosynchronisierung.
 </p>
 `;
 
 const header=document.querySelector("header");
 header.after(panel);
-
 const launch=document.createElement("button");
 launch.type="button";
 launch.textContent="Raid-Planer";
@@ -1887,25 +1489,17 @@ launch.className="orange";
 const bar=document.createElement("div");
 bar.id="rpMapBar";
 bar.hidden=true;
-bar.innerHTML=`
-  <span id="rpMapCount"></span>
-  <button id="rpFinish" type="button">Route fertig</button>
-`;
+bar.innerHTML='<span id="rpMapCount"></span><button id="rpFinish" type="button">Zum Plan</button>';
 document.body.append(bar);
 
-function say(message){
-  el("Status").textContent=message;
-}
+function say(message){el("Status").textContent=message}
 
 function persist(){
   try{
-    localStorage.setItem(KEY,JSON.stringify({
-      plans,draft,catalog
-    }));
+    localStorage.setItem(KEY,JSON.stringify({plans,draft,catalog}));
     return true;
   }catch(e){
-    say("Speicher voll oder gesperrt. "+
-      "Änderungen bleiben nur in dieser Sitzung.");
+    say("Speicher voll oder gesperrt. Änderungen bleiben nur in dieser Sitzung.");
     return false;
   }
 }
@@ -1916,91 +1510,65 @@ function option(select,value,label){
   o.textContent=label;
   select.append(o);
 }
-
-for(const [id,c]of Object.entries(configs)){
-  option(el("Map"),id,c.name);
-}
+for(const [id,c]of Object.entries(configs))option(el("Map"),id,c.name);
 
 function savedList(){
   el("Saved").replaceChildren();
   option(el("Saved"),"","Plan auswählen …");
-
   for(const p of plans){
-    option(el("Saved"),p.id,
-      p.name+" · "+configs[p.map].name);
+    option(el("Saved"),p.id,p.name+" · "+configs[p.map].name);
   }
-
-  el("Saved").value=plans.some(p=>p.id===draft.id)
-    ?draft.id:"";
+  el("Saved").value=plans.some(p=>p.id===draft.id)?draft.id:"";
 }
 
 function buildList(){
   el("Build").replaceChildren();
   option(el("Build"),"","Ohne Build");
-
-  for(const b of catalog){
-    option(el("Build"),b.id,b.name);
-  }
-
+  for(const b of catalog)option(el("Build"),b.id,b.name);
   if(draft.build&&!catalog.some(b=>b.id===draft.build)){
-    option(el("Build"),draft.build,
-      "Gespeicherter Build – Liste bitte laden");
+    option(el("Build"),draft.build,"Gespeicherter Build – Liste bitte laden");
   }
-
   el("Build").value=draft.build;
   buildInfo();
 }
 
 function buildInfo(){
   const b=catalog.find(b=>b.id===draft.build);
-
-  el("BuildInfo").textContent=b
-    ?b.warning
-    :catalog.length
-      ?catalog.length+" Builds verfügbar."
-      :"Buildliste von deiner Waffen-Seite laden.";
-
+  el("BuildInfo").textContent=b?b.warning:catalog.length
+    ?catalog.length+" Builds verfügbar."
+    :"Buildliste von deiner Waffen-Seite laden.";
   el("Parts").textContent=b
     ?b.parts.length
       ?b.parts.map(p=>p[0]+": "+p[1]).join("\n")
       :"Für diesen Build ist keine Aufsatzliste hinterlegt."
     :"Build auswählen.";
-
-  el("Code").textContent=b?.code||
-    "Kein Importcode ausgewählt.";
-
+  el("Code").textContent=b?.code||"Kein Importcode ausgewählt.";
   el("Copy").disabled=!b?.code;
 }
 
 function checks(){
   el("Checks").replaceChildren();
-
   draft.checks.forEach((c,index)=>{
     const label=document.createElement("label");
     const input=document.createElement("input");
     input.type="checkbox";
     input.checked=c.done;
-
     const span=document.createElement("span");
     span.textContent=c.label;
-
     input.addEventListener("change",()=>{
       c.done=input.checked;
       persist();
     });
-
     const remove=document.createElement("button");
     remove.type="button";
     remove.textContent="×";
     remove.setAttribute("aria-label",c.label+" entfernen");
-
     remove.addEventListener("click",e=>{
       e.preventDefault();
       draft.checks.splice(index,1);
       persist();
       checks();
     });
-
     label.append(input,span,remove);
     el("Checks").append(label);
   });
@@ -2008,100 +1576,67 @@ function checks(){
 
 function routeList(){
   el("RouteList").replaceChildren();
-
   draft.route.forEach((point,index)=>{
     const li=document.createElement("li");
     const name=document.createElement("span");
     name.textContent=point.name;
     li.append(name);
-
-    for(const [label,delta]of [
-      ["↑",-1],["↓",1],["×",0]
-    ]){
+    for(const [label,delta]of [["↑",-1],["↓",1],["×",0]]){
       const b=document.createElement("button");
       b.type="button";
       b.textContent=label;
-
       b.setAttribute("aria-label",delta
-        ?"Routenpunkt "+(index+1)+" "+
-          (delta<0?"nach oben":"nach unten")
+        ?"Routenpunkt "+(index+1)+" "+(delta<0?"nach oben":"nach unten")
         :"Routenpunkt "+(index+1)+" entfernen");
-
       b.disabled=delta!==0&&(
-        index+delta<0||
-        index+delta>=draft.route.length
+        index+delta<0||index+delta>=draft.route.length
       );
-
       b.addEventListener("click",()=>{
-        if(!delta){
-          draft.route.splice(index,1);
-        }else{
-          [
-            draft.route[index],
-            draft.route[index+delta]
-          ]=[
-            draft.route[index+delta],
-            draft.route[index]
-          ];
+        if(!delta)draft.route.splice(index,1);
+        else{
+          [draft.route[index],draft.route[index+delta]]=
+            [draft.route[index+delta],draft.route[index]];
         }
-
         persist();
         routeList();
         drawRoute();
       });
-
       li.append(b);
     }
-
     el("RouteList").append(li);
   });
-
   el("MapCount").textContent=
-    draft.route.length+" Routenpunkte · "+
-    configs[draft.map].name;
+    draft.route.length+" Routenpunkte · "+configs[draft.map].name;
 }
 
 function fill(){
   for(const [id,key]of [
-    ["Name","name"],
-    ["Map","map"],
-    ["Goal","goal"],
-    ["Armor","armor"],
-    ["Ammo","ammo"],
-    ["Notes","notes"]
-  ]){
-    el(id).value=draft[key];
-  }
-
+    ["Name","name"],["Map","map"],["Goal","goal"],
+    ["Armor","armor"],["Ammo","ammo"],["Notes","notes"]
+  ])el(id).value=draft[key];
   if(!el("Goal").value){
     draft.goal="Eigene Route";
     el("Goal").value=draft.goal;
   }
-
+  el("Stops").value=String(draft.stops);
   savedList();
   buildList();
   checks();
   routeList();
   drawRoute();
+  autoChoices();
 }
 
 function switchMap(){
   if(selected!==draft.map){
     $("mapSelect").value=draft.map;
-    $("mapSelect").dispatchEvent(
-      new Event("change",{bubbles:true})
-    );
+    $("mapSelect").dispatchEvent(new Event("change",{bubbles:true}));
   }
 }
-
 function show(){
   panel.hidden=false;
-  panel.scrollIntoView({
-    behavior:"smooth",
-    block:"start"
-  });
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
 }
-
 function stopRoute(){
   editing=false;
   bar.hidden=true;
@@ -2109,112 +1644,224 @@ function stopRoute(){
 
 function drawRoute(){
   if(!leafletMap||typeof L==="undefined")return;
-
-  if(!layer){
-    layer=L.layerGroup().addTo(leafletMap);
-  }
-
+  if(!layer)layer=L.layerGroup().addTo(leafletMap);
   layer.clearLayers();
-
-  if(
-    !bounds||!imageLayer||
-    selected!==draft.map||loading
-  )return;
-
+  if(!bounds||!imageLayer||selected!==draft.map||loading)return;
   const points=draft.route.map(positionToLatLng);
-
   if(points.length>1){
     L.polyline(points,{
-      color:"#ff963f",
-      weight:3,
-      dashArray:"7 5",
-      interactive:false
+      color:"#ff963f",weight:3,dashArray:"7 5",interactive:false
     }).addTo(layer);
   }
-
   points.forEach((latlng,index)=>{
     const icon=L.divIcon({
       className:"",
       html:'<div class="rpPoint">'+(index+1)+'</div>',
-      iconSize:[28,28],
-      iconAnchor:[14,14]
+      iconSize:[28,28],iconAnchor:[14,14]
     });
-
     L.marker(latlng,{
-      icon,
-      interactive:false,
-      zIndexOffset:2000
+      icon,interactive:false,zIndexOffset:2000
     }).addTo(layer);
   });
 }
 
-function addPoint(latlng,name){
-  if(
-    !editing||selected!==draft.map||loading||
-    !bounds||!imageLayer||!bounds.contains(latlng)
-  )return;
+let autoData=null,autoMap="",spawns=[],exits=[];
 
-  if(draft.route.length>=150){
-    say("Maximal 150 Routenpunkte pro Plan.");
-    stopRoute();
-    show();
+function mapPoints(){
+  if(loading||selected!==draft.map||
+    !currentData||!bounds||state().image)return [];
+  const cats=new Map(
+    currentData.categories.map(c=>[String(c.id),c.name])
+  );
+  return currentData.markers
+    .filter(m=>Array.isArray(m.position)&&m.position.length===2&&
+      m.position.every(Number.isFinite))
+    .map(m=>({
+      id:String(m.categoryId)+":"+m.position.join(","),
+      x:m.position[0],y:m.position[1],
+      category:cats.get(String(m.categoryId))||"",
+      title:String(m.popup?.title||cats.get(String(m.categoryId))||"Marker"),
+      description:String(m.popup?.description||"")
+    }))
+    .filter(p=>bounds.contains(L.latLng(p.y,p.x)));
+}
+
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+function lootCategories(){
+  if(draft.goal==="Schlüssel looten"){
+    return new Set(["Jacket","Filing Cabinet","Suitcase"]);
+  }
+  if(draft.goal==="Safes looten")return new Set(["Safe"]);
+  if(draft.goal==="Waffenkisten looten"){
+    return new Set(["Weapon Box","Military Supply Case","Military Supply Crate"]);
+  }
+  return null;
+}
+
+function autoChoices(){
+  el("AutoHint").textContent=draft.goal==="Schlüssel looten"
+    ?"Schlüssel-Kandidaten: Jacken, Aktenschränke und Koffer. Keine garantierten Schlüssel-Spawns."
+    :"Automatische Routen sind für Safes, Schlüssel-Kandidaten und Waffenkisten verfügbar.";
+
+  if(loading||selected!==draft.map)return;
+  if(autoData===currentData&&autoMap===selected){
+    el("Exit").value=draft.exit;
     return;
   }
 
-  draft.route.push({
-    ...latLngToPosition(latlng),
-    name:text(name)||
-      "Routenpunkt "+(draft.route.length+1)
+  autoData=currentData;
+  autoMap=selected;
+  const all=mapPoints();
+  spawns=all.filter(p=>/^player.*spawn/i.test(p.category));
+  exits=all.filter(p=>p.category==="Extraction Point");
+
+  el("Spawn").replaceChildren();
+  option(el("Spawn"),"","Spawn auswählen …");
+  spawns.forEach((p,i)=>{
+    option(el("Spawn"),p.id,"Spawn "+(i+1)+" · "+p.title);
   });
 
+  el("Exit").replaceChildren();
+  option(el("Exit"),"","Ohne Ausgang");
+  exits.forEach(p=>option(el("Exit"),p.id,p.title+" · Bedingungen prüfen"));
+  if(!exits.some(p=>p.id===draft.exit))draft.exit="";
+  el("Exit").value=draft.exit;
+}
+
+function bestOrder(start,points,end){
+  let best=Infinity,result=[];
+  function visit(last,remaining,path,cost){
+    if(cost>=best)return;
+    if(!remaining.length){
+      const total=cost+(end?distance(last,end):0);
+      if(total<best){
+        best=total;
+        result=path.slice();
+      }
+      return;
+    }
+    remaining.forEach((point,index)=>{
+      visit(
+        point,
+        remaining.filter((_,i)=>i!==index),
+        path.concat(point),
+        cost+distance(last,point)
+      );
+    });
+  }
+  visit(start,points,[],0);
+  return result;
+}
+
+function calculateRoute(start){
+  if(loading||selected!==draft.map||!currentData||
+    !bounds||!imageLayer||state().image){
+    say("Bitte warten, bis eine Community-Karte vollständig geladen ist.");
+    return;
+  }
+
+  const categories=lootCategories();
+  if(!categories){
+    say("Für dieses Ziel fehlen automatische Zielpunkte. Wähle Safes, Schlüssel looten oder Waffenkisten.");
+    return;
+  }
+
+  const targets=mapPoints()
+    .filter(p=>categories.has(p.category))
+    .sort((a,b)=>distance(start,a)-distance(start,b));
+  const unique=[];
+  for(const p of targets){
+    if(!unique.some(q=>distance(p,q)<1))unique.push(p);
+  }
+
+  const near=unique.slice(0,draft.stops);
+  if(!near.length){
+    say("Für dieses Lootziel sind auf dieser Karte keine Fundstellen hinterlegt.");
+    return;
+  }
+
+  const end=exits.find(p=>p.id===draft.exit)||null;
+  const ordered=bestOrder(start,near,end);
+  const path=[
+    {...start,title:"START · "+(start.title||"Eigene Position")},
+    ...ordered.map(p=>({
+      ...p,title:p.title+" · "+categoryName(p.category)
+    }))
+  ];
+
+  if(end){
+    path.push({...end,title:"AUSGANG · "+end.title+" · Bedingungen prüfen"});
+  }
+
+  draft.route=path.map(p=>({
+    ...latLngToPosition(L.latLng(p.y,p.x)),
+    name:text(p.title)
+  }));
+
+  editing=false;
   persist();
   routeList();
   drawRoute();
+  bar.hidden=false;
+  el("MapCount").textContent=ordered.length+" Lootstopps · Luftlinienroute";
+
+  say("Route berechnet: "+ordered.length+" nahe Lootstopps."+
+    (end?" Ausgangsbedingungen: "+
+      (end.description||"Nicht hinterlegt – im Spiel prüfen."):"")+
+    " Mit „Plan speichern“ sichern.");
+
+  leafletMap.fitBounds(
+    L.latLngBounds(path.map(p=>[p.y,p.x])),
+    {padding:[35,55],animate:false}
+  );
+}
+
+function addPoint(latlng,name){
+  if(!editing||selected!==draft.map||loading||
+    !bounds||!imageLayer||!bounds.contains(latlng))return;
+  autoChoices();
+  const start={x:latlng.lng,y:latlng.lat,title:"Eigene Startposition"};
+  if(name){
+    const spawn=spawns.find(p=>distance(p,start)<1);
+    if(!spawn){
+      el("MapCount").textContent="Bitte einen Spawnmarker antippen";
+      return;
+    }
+    calculateRoute(spawn);
+  }else calculateRoute(start);
 }
 
 const originalDraw=drawCommunity;
-
 drawCommunity=function(){
   originalDraw();
-
   communityLayer?.eachLayer(marker=>{
     if(typeof marker.getLatLng==="function"){
-      marker.on("click",()=>{
-        addPoint(
-          marker.getLatLng(),
-          marker.options.title
-        );
-      });
+      marker.on("click",()=>addPoint(marker.getLatLng(),marker.options.title));
     }
   });
-
   drawRoute();
+  autoChoices();
 };
 
 if(leafletMap){
   leafletMap.on("click",event=>{
-    if(tool==="inspect"){
-      addPoint(event.latlng,"");
-    }
+    if(tool==="inspect")addPoint(event.latlng,"");
   });
 }
-
 document.querySelectorAll("[data-tool]").forEach(b=>{
   b.addEventListener("click",stopRoute);
 });
-
 $("mapSelect").addEventListener("change",()=>{
   stopRoute();
   drawRoute();
 });
-
 launch.addEventListener("click",show);
 
 el("Close").addEventListener("click",()=>{
   stopRoute();
   panel.hidden=true;
 });
-
 el("New").addEventListener("click",()=>{
   stopRoute();
   draft=cleanPlan({map:selected});
@@ -2222,11 +1869,9 @@ el("New").addEventListener("click",()=>{
   fill();
   say("Neuer Entwurf.");
 });
-
 el("Saved").addEventListener("change",()=>{
   const p=plans.find(p=>p.id===el("Saved").value);
   if(!p)return;
-
   stopRoute();
   draft=cleanPlan(p);
   persist();
@@ -2234,67 +1879,71 @@ el("Saved").addEventListener("change",()=>{
   switchMap();
   say("Plan geöffnet.");
 });
-
 el("Save").addEventListener("click",()=>{
   if(!draft.id)draft.id=uid();
-
   const index=plans.findIndex(p=>p.id===draft.id);
-
   if(index<0&&plans.length>=30){
     say("Maximal 30 gespeicherte Pläne.");
     return;
   }
-
-  if(index<0){
-    plans.push(cleanPlan(draft));
-  }else{
-    plans[index]=cleanPlan(draft);
-  }
-
+  if(index<0)plans.push(cleanPlan(draft));
+  else plans[index]=cleanPlan(draft);
   if(persist()){
     savedList();
     say("Plan gespeichert: "+draft.name);
   }
 });
-
 el("Delete").addEventListener("click",()=>{
   if(!plans.some(p=>p.id===draft.id)){
     say("Dieser Entwurf ist noch nicht in der Planliste.");
     return;
   }
-
-  if(!confirm(
-    "Gespeicherten Plan „"+draft.name+"“ löschen?"
-  ))return;
-
+  if(!confirm("Gespeicherten Plan „"+draft.name+"“ löschen?"))return;
   plans=plans.filter(p=>p.id!==draft.id);
   draft.id="";
   persist();
   savedList();
-
-  say("Aus der Planliste entfernt. "+
-    "Der Entwurf bleibt geöffnet.");
+  say("Aus der Planliste entfernt. Der Entwurf bleibt geöffnet.");
 });
 
 for(const [id,key]of [
-  ["Name","name"],
-  ["Goal","goal"],
-  ["Armor","armor"],
-  ["Ammo","ammo"],
-  ["Notes","notes"]
+  ["Name","name"],["Goal","goal"],["Armor","armor"],
+  ["Ammo","ammo"],["Notes","notes"]
 ]){
   el(id).addEventListener("input",()=>{
     draft[key]=el(id).value;
     persist();
   });
 }
-
+el("Goal").addEventListener("change",()=>{
+  stopRoute();
+  autoChoices();
+  say("Lootziel geändert. Spawn erneut wählen, um die Route neu zu berechnen.");
+});
+el("Stops").addEventListener("change",()=>{
+  draft.stops=Number(el("Stops").value);
+  persist();
+  say("Anzahl geändert. Route vom Spawn neu berechnen.");
+});
+el("Exit").addEventListener("change",()=>{
+  draft.exit=el("Exit").value;
+  persist();
+  say("Ausgang gewählt. Route vom Spawn neu berechnen; Bedingungen im Spiel prüfen.");
+});
+el("FromSpawn").addEventListener("click",()=>{
+  autoChoices();
+  const spawn=spawns.find(p=>p.id===el("Spawn").value);
+  if(!spawn){
+    say("Bitte zuerst einen Spawn aus der Liste auswählen.");
+    return;
+  }
+  calculateRoute(spawn);
+});
 el("Build").addEventListener("change",()=>{
   draft.build=el("Build").value;
   persist();
   buildInfo();
 });
-
 el("Map").addEventListener("change",()=>{
   if(draft.route.length&&!confirm(
     "Beim Kartenwechsel die Route dieses Entwurfs leeren?"
@@ -2302,7 +1951,6 @@ el("Map").addEventListener("change",()=>{
     el("Map").value=draft.map;
     return;
   }
-
   stopRoute();
   draft.map=el("Map").value;
   draft.route=[];
@@ -2311,114 +1959,110 @@ el("Map").addEventListener("change",()=>{
   switchMap();
   drawRoute();
 });
-
 el("AddCheck").addEventListener("click",()=>{
   const label=el("NewCheck").value.trim();
   if(!label)return;
-
   if(draft.checks.length>=30){
     say("Maximal 30 Checkpunkte.");
     return;
   }
-
   draft.checks.push({label,done:false});
   el("NewCheck").value="";
   persist();
   checks();
 });
 
-el("EditRoute").addEventListener("click",()=>{
+el("EditRoute").addEventListener("click",async()=>{
   if(!leafletMap){
     say("Die Karte ist noch nicht verfügbar.");
     return;
   }
+  if(!lootCategories()){
+    say("Wähle Safes looten, Schlüssel looten oder Waffenkisten looten.");
+    return;
+  }
 
   switchMap();
-  tool="inspect";
-  translate();
+  for(let i=0;loading&&i<100;i++){
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
 
+  if(loading||!currentData||!bounds||!imageLayer||state().image){
+    say("Community-Karte noch nicht verfügbar. Bitte erneut versuchen.");
+    return;
+  }
+
+  tool="inspect";
+  keyMode=false;
+  $("search").value="";
+  const relevant=lootCategories();
+  for(const c of currentData.categories){
+    if(relevant.has(c.name)||/^player.*spawn/i.test(c.name)||
+      c.name==="Extraction Point"){
+      hidden.delete(c.name);
+    }else hidden.add(c.name);
+  }
+
+  savePrefs();
+  buildFilters();
+  translate();
   editing=true;
   bar.hidden=false;
   routeList();
-
-  $("map").scrollIntoView({
-    behavior:"smooth",
-    block:"center"
-  });
-
+  el("MapCount").textContent=
+    "Deinen Spawn antippen · Route wird automatisch berechnet";
+  $("map").scrollIntoView({behavior:"smooth",block:"center"});
   drawCommunity();
 });
 
 el("Finish").addEventListener("click",()=>{
   stopRoute();
   show();
-
-  say("Route im Entwurf gesichert. "+
-    "„Plan speichern“ aktualisiert deine Planliste.");
+  say("Route im Entwurf gesichert. „Plan speichern“ aktualisiert deine Planliste.");
 });
-
 el("ClearRoute").addEventListener("click",()=>{
-  if(draft.route.length&&!confirm(
-    "Route dieses Entwurfs leeren?"
-  ))return;
-
+  if(draft.route.length&&!confirm("Route dieses Entwurfs leeren?"))return;
   draft.route=[];
   persist();
   routeList();
   drawRoute();
 });
-
 el("Copy").addEventListener("click",async()=>{
   const code=catalog.find(b=>b.id===draft.build)?.code;
   if(!code)return;
-
   try{
     await navigator.clipboard.writeText(code);
     say("Importcode kopiert.");
   }catch(e){
-    say("Kopieren nicht möglich. "+
-      "Den angezeigten Code gedrückt halten und kopieren.");
+    say("Kopieren nicht möglich. Den angezeigten Code gedrückt halten und kopieren.");
   }
 });
-
 el("LoadBuilds").addEventListener("click",()=>{
   if(frame)frame.remove();
-
   frame=document.createElement("iframe");
   frame.hidden=true;
   frame.title="Waffen-Buildliste";
   frame.src="./waffen.html";
-
   frame.addEventListener("load",()=>{
     frame.contentWindow.postMessage({
       type:"ABI_RAID_BUILDS_REQUEST"
     },location.origin);
   });
-
   document.body.append(frame);
   say("Buildliste wird geladen …");
-
   const requested=frame;
-
   setTimeout(()=>{
-    if(
-      frame===requested&&
-      el("Status").textContent==="Buildliste wird geladen …"
-    ){
-      say("Keine Antwort. Bitte den Verbindungsblock "+
-        "in waffen.html einfügen und erneut laden.");
+    if(frame===requested&&
+      el("Status").textContent==="Buildliste wird geladen …"){
+      say("Keine Antwort. Bitte den Verbindungsblock in waffen.html einfügen und erneut laden.");
     }
   },12000);
 });
 
 window.addEventListener("message",event=>{
-  if(
-    event.origin!==location.origin||
-    !frame||
+  if(event.origin!==location.origin||!frame||
     event.source!==frame.contentWindow||
-    event.data?.type!=="ABI_RAID_BUILDS"
-  )return;
-
+    event.data?.type!=="ABI_RAID_BUILDS")return;
   catalog=cleanBuilds(event.data.builds);
   persist();
   buildList();
@@ -2429,5 +2073,6 @@ fill();
 drawCommunity();
 })();
 </script>
+
 </body>
 </html>

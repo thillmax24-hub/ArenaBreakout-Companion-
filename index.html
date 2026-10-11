@@ -1137,5 +1137,148 @@ if(typeof L==="undefined"){
   loadSelected();
 }
 </script>
+<script>
+(() => {
+  const iconRoot =
+    "https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/icons/";
+
+  const categoryIcons = {
+    "Player Spawn": "Spawnicon.png",
+    "Player spawn (Lockdown)": "Spawnicon.png",
+    "Extraction Point": "Extracticon.png",
+    "Key Rooms": "Keysico.png",
+    "Safe": "Safeico.png",
+    "Air Drop": "Airdropi.png",
+    "SCAV SNIPER": "Scav.png",
+    "Scav Sniper": "Scav.png",
+    "Military Supply Case": "Mstoragecase.png",
+    "Military Supply Crate": "Mstoragecase.png",
+    "Weapon Box": "Weaponboxico.png",
+    "Weapons": "Assault-rifle.png",
+    "Document Case": "Documentcaseico.png",
+    "Filing Cabinet": "Filingcabinetico.png",
+    "Storage Case": "Storagecase.png",
+    "Computer": "Computerico.png",
+    "Toolbox": "Toolboxico.png",
+    "Ammo Box": "Ammoboxico.png",
+    "Grenade Box": "Grenadeboxico.png",
+    "Duffle Bag": "Dufflebagico.png",
+    "Jacket": "Jacketico.png",
+    "Suitcase": "Suitcaseico.png",
+    "Medical": "Medicalico.png",
+    "Cash Register": "Cashierico.png",
+    "Extraction Lever": "ArmoryLever2.png",
+    "Switch": "ArmoryLever2.png"
+  };
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    .small-picture-icon {
+      background:transparent;
+      border:0;
+      display:grid;
+      place-items:center;
+    }
+
+    .small-picture-icon .picture-wrap {
+      width:28px;
+      height:28px;
+      display:grid;
+      place-items:center;
+    }
+
+    .small-picture-icon img {
+      width:18px;
+      height:18px;
+      object-fit:contain;
+      filter:drop-shadow(0 1px 2px #000);
+      pointer-events:none;
+    }
+
+    .small-picture-icon:hover img {
+      filter:
+        drop-shadow(0 0 2px white)
+        drop-shadow(0 1px 2px #000);
+    }
+
+    .small-own-icon {
+      background:transparent;
+      border:0;
+      display:grid;
+      place-items:center;
+    }
+
+    .small-own-icon .personal-dot {
+      width:22px;
+      height:22px;
+      border:2px solid white;
+      border-radius:50%;
+      color:#101510;
+      font-size:10px;
+      font-weight:850;
+      display:grid;
+      place-items:center;
+      box-shadow:0 2px 5px #0009;
+    }
+  `;
+
+  document.head.append(style);
+
+  const previousAppearance = appearance;
+
+  appearance = function(name) {
+    const [symbol, color] = previousAppearance(name);
+    return [categoryIcons[name] || symbol, color];
+  };
+
+  icon = function(symbol, color, personal = false) {
+    const wrapper = document.createElement("div");
+
+    if (personal) {
+      const dot = document.createElement("div");
+      dot.className = "personal-dot";
+      dot.textContent = symbol;
+      dot.style.background = color;
+      wrapper.append(dot);
+    } else {
+      wrapper.className = "picture-wrap";
+
+      if (String(symbol).endsWith(".png")) {
+        const image = document.createElement("img");
+        image.src = iconRoot + encodeURIComponent(symbol);
+        image.alt = "";
+        image.draggable = false;
+
+        image.addEventListener("error", () => {
+          wrapper.replaceChildren();
+          wrapper.textContent = "●";
+          wrapper.style.color = color;
+          wrapper.style.fontSize = "18px";
+        });
+
+        wrapper.append(image);
+      } else {
+        wrapper.textContent = symbol;
+        wrapper.style.color = color;
+      }
+    }
+
+    return L.divIcon({
+      html: wrapper,
+      className: personal
+        ? "small-own-icon"
+        : "small-picture-icon",
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -12]
+    });
+  };
+
+  if (typeof L !== "undefined" && leafletMap) {
+    drawOwn();
+  }
+})();
+</script>
 </body>
 </html>

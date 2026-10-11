@@ -697,6 +697,7 @@ function buildCard(build){
   }else card.append(node("p","muted","Genaue Spielwerte des Builds nicht hinterlegt."));
 
   const parts=node("details");
+  parts.open = build.parts.length > 0;
   parts.append(node("summary","",build.parts.length
     ?"Teileliste · "+build.parts.length+" Einträge":"Teileliste noch nicht hinterlegt"));
   if(build.parts.length){

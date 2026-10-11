@@ -5,1083 +5,1137 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101613">
 <title>Arena Breakout Companion</title>
+
+<link rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 <style>
-:root{color-scheme:dark;--bg:#0b100e;--panel:#141d18;--line:#2b3b30;--green:#c2ee75;--muted:#9cad9f}
+:root{
+  color-scheme:dark;
+  --bg:#0b100e;
+  --panel:#151e18;
+  --border:#2b3b30;
+  --green:#c2ee75;
+  --muted:#a3b3a6;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#edf4ed;font:15px system-ui,sans-serif}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#edf4ed;
+  font:14px system-ui,sans-serif;
+}
 button,input,select{font:inherit}
-button,select,.upload{background:#202d24;color:#edf4ed;border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+button,select,input[type=text],.upload{
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:#202c24;
+  color:#edf4ed;
+  padding:10px 12px;
+}
 button,.upload{cursor:pointer}
 button:hover,.upload:hover{border-color:var(--green)}
-button:focus-visible,input:focus-visible,select:focus-visible,.upload:focus-within{outline:2px solid var(--green);outline-offset:3px}
-button.active,.primary{background:var(--green);color:#152014}
-header{max-width:1400px;margin:auto;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:15px}
-.brand{font-size:20px;font-weight:850;letter-spacing:.6px}
-.brand small{display:block;font-size:11px;color:var(--green);letter-spacing:3px;margin-top:5px}
-main{max-width:1400px;margin:auto;padding:0 24px 30px}
-.hero{padding:18px 0 24px}
-h1{font-size:clamp(28px,5vw,46px);margin:0 0 10px}
-p{color:var(--muted);line-height:1.6}
-.badge{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;color:var(--green)}
-.layout{display:grid;grid-template-columns:300px 1fr;gap:18px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
-h2{font-size:17px;margin:0 0 15px}
-label.field{display:block;color:var(--muted);font-size:13px;margin-bottom:7px}
-select,input[type=text]{width:100%;margin-bottom:15px}
-input[type=text]{background:#0e1510;color:white;border:1px solid var(--line);border-radius:9px;padding:12px}
-.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tools button{text-align:left;font-size:13px}
-.help{font-size:12px}
-.upload{display:block;text-align:center;margin-top:15px}
-.upload input{position:absolute;width:1px;height:1px;opacity:0}
-.filters{display:flex;flex-wrap:wrap;gap:12px;margin:15px 0}
-.filters label{font-size:12px;color:var(--muted)}
-.map-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+button:disabled{opacity:.45;cursor:default}
+button.active{background:var(--green);color:#152014}
+button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--green);
+  outline-offset:2px;
+}
+header{
+  padding:18px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.brand{font-size:19px;font-weight:850}
+.brand small{
+  display:block;
+  font-size:10px;
+  color:var(--green);
+  letter-spacing:3px;
+  margin-top:5px;
+}
+main{
+  max-width:1600px;
+  margin:auto;
+  padding:18px;
+  display:grid;
+  grid-template-columns:310px minmax(0,1fr);
+  gap:16px;
+}
+.panel{
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--panel);
+  padding:16px;
+  margin-bottom:14px;
+}
+h2{font-size:16px;margin:0 0 13px}
+label.field{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin:12px 0 7px;
+}
+select,input[type=text]{width:100%}
+.tools{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:12px;
+}
+.tools button{font-size:12px}
+.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.help{font-size:12px;color:var(--muted);line-height:1.6}
+.upload{display:block;text-align:center;margin-top:12px}
+.upload input{position:absolute;opacity:0;width:1px;height:1px}
+#categories{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+  max-height:340px;
+  overflow:auto;
+}
+#categories label{font-size:12px;display:flex;gap:5px;align-items:start}
+#categories input{margin:2px 0}
+#status{font-size:12px;color:var(--green);line-height:1.6;margin:12px 0}
+#results{max-height:250px;overflow:auto;display:grid;gap:7px;margin-top:12px}
+#results button{text-align:left;font-size:12px}
+.map-panel{min-width:0}
+.map-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
 .map-head h2{margin:0}
-.zoom{display:flex;gap:5px;align-items:center}
-.zoom button{padding:7px 11px}
-#viewport{height:560px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#0a100c}
-#board{position:relative;width:100%;aspect-ratio:1;min-height:300px;overflow:hidden;background-color:#111c14;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:40px 40px}
-#mapImage{position:absolute;width:100%;height:100%;object-fit:fill;pointer-events:none}
-#routeSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-#empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:30px;pointer-events:none}
-#empty strong{font-size:24px}
-#empty p{max-width:370px}
-.marker{position:absolute;transform:translate(-50%,-50%);width:32px;height:32px;padding:0;border-radius:50%;border:2px solid white;color:#09110b;font-weight:900;box-shadow:0 3px 12px #0009;z-index:2}
-.marker.player{background:#c2ee75}
-.marker.loot{background:#f3ca64}
-.marker.exit{background:#66c6fa}
-.marker.note{background:#d0a0fb}
-.marker.route{background:#ffffff;width:23px;height:23px;font-size:11px}
-.legend{display:flex;flex-wrap:wrap;gap:15px;padding-top:12px;font-size:12px;color:var(--muted)}
+#map{
+  width:100%;
+  height:calc(100dvh - 180px);
+  min-height:480px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#0b130e;
+}
+#summary{color:var(--muted);font-size:12px;line-height:1.6;margin-top:12px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:12px;color:var(--muted)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
-.list{margin-top:18px}
-#markerList{display:grid;gap:8px;max-height:300px;overflow:auto}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;background:#0d1510;border-radius:9px}
-.row span{overflow-wrap:anywhere}
-.row small{display:block;color:var(--muted);margin-top:4px}
-.row button{padding:6px 10px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:26px}
-#status{min-height:20px;color:var(--green);font-size:12px}
-@media(max-width:850px){.layout{grid-template-columns:1fr}header,main{padding-left:16px;padding-right:16px}#viewport{height:440px}}
+.poi-icon{background:none;border:0}
+.poi-icon span{
+  display:grid;
+  place-items:center;
+  width:25px;height:25px;
+  border:1px solid #fff;
+  border-radius:7px;
+  color:#101510;
+  font-size:12px;
+  font-weight:850;
+  box-shadow:0 2px 7px #0009;
+}
+.own-icon span{border:2px solid white;border-radius:50%;width:29px;height:29px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1b2920;color:#edf4ed}
+.leaflet-popup-content{line-height:1.6;min-width:190px;max-width:280px}
+.leaflet-popup-content h3{margin:0 0 7px;font-size:16px}
+.leaflet-popup-content p{margin:7px 0;white-space:pre-line}
+.leaflet-popup-content small{color:#b0c1b3}
+.leaflet-popup-content button{margin-top:10px}
+.leaflet-control-zoom a{
+  background:#202c24!important;
+  color:white!important;
+  border-color:#3b4d40!important;
+}
+.leaflet-control-attribution{background:#142018dd!important;color:#b0c1b3!important}
+.leaflet-control-attribution a{color:#c2ee75!important}
+footer{padding:10px 20px 24px;text-align:center;font-size:12px;color:var(--muted)}
+footer a{color:var(--green)}
+@media(max-width:850px){
+  main{grid-template-columns:1fr;padding:12px}
+  .map-panel{grid-row:1}
+  #map{height:62dvh;min-height:380px}
+  header{padding:15px}
+}
 </style>
 </head>
 <body>
+
 <header>
-<div class="brand">ARENA BREAKOUT<small>COMPANION / TACTICAL PLANNER</small></div>
-<button id="language">EN</button>
+  <div class="brand">
+    ARENA BREAKOUT
+    <small>COMPANION / INTERACTIVE MAPS</small>
+  </div>
+  <button id="language">EN</button>
 </header>
+
 <main>
-<section class="hero">
-<span class="badge" data-i18n="badge"></span>
-<h1 data-i18n="title"></h1>
-<p data-i18n="intro"></p>
-</section>
-<div class="layout">
 <aside>
-<section class="panel">
-<h2 data-i18n="planning"></h2>
-<label class="field" for="mapSelect" data-i18n="map"></label>
-<select id="mapSelect">
-<option value="farm">Farm</option>
-<option value="valley">Valley</option>
-<option value="northridge">Northridge</option>
-<option value="armory">Armory</option>
-<option value="tv">TV Station</option>
-<option value="custom">Custom</option>
-</select>
-<label class="field" for="markerName" data-i18n="name"></label>
-<input id="markerName" type="text" maxlength="80">
-<div class="tools">
-<button data-tool="player" data-i18n="player"></button>
-<button data-tool="loot" data-i18n="loot"></button>
-<button data-tool="exit" data-i18n="exit"></button>
-<button data-tool="note" data-i18n="note"></button>
-<button data-tool="route" data-i18n="route"></button>
-<button data-tool="inspect" data-i18n="inspect"></button>
-</div>
-<p class="help" data-i18n="instructions"></p>
-<label class="upload">
-<span data-i18n="upload"></span>
-<input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp">
-</label>
-<p class="help" data-i18n="imageHelp"></p>
-<div id="status" role="status" aria-live="polite"></div>
-</section>
-<section class="panel list">
-<h2 data-i18n="markers"></h2>
-<div id="markerList"></div>
-<div class="actions">
-<button id="undo" data-i18n="undo"></button>
-<button id="clear" data-i18n="clear"></button>
-</div>
-</section>
+  <section class="panel">
+    <h2 data-text="planning"></h2>
+
+    <label class="field" for="mapSelect" data-text="mapLabel"></label>
+    <select id="mapSelect">
+      <option value="farm">Farm</option>
+      <option value="valley">Valley</option>
+      <option value="armory">Armory</option>
+      <option value="tv">TV Station</option>
+      <option value="northridge">Northridge · eigenes Bild</option>
+      <option value="custom">Eigene Karte</option>
+    </select>
+
+    <label class="field" for="markerName" data-text="name"></label>
+    <input id="markerName" type="text" maxlength="80">
+
+    <div class="tools">
+      <button data-tool="inspect" data-text="inspect"></button>
+      <button data-tool="player" data-text="player"></button>
+      <button data-tool="note" data-text="note"></button>
+      <button data-tool="loot" data-text="loot"></button>
+      <button data-tool="exit" data-text="exit"></button>
+      <button data-tool="route" data-text="route"></button>
+    </div>
+
+    <p class="help" data-text="instructions"></p>
+
+    <div class="actions">
+      <button id="undo" data-text="undo"></button>
+      <button id="clearOwn" data-text="clearOwn"></button>
+    </div>
+
+    <label class="upload">
+      <span data-text="upload"></span>
+      <input id="upload" type="file"
+       accept="image/png,image/jpeg,image/webp">
+    </label>
+
+    <div class="actions">
+      <button id="original" data-text="original"></button>
+    </div>
+
+    <div id="status" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="panel">
+    <h2 data-text="filters"></h2>
+    <input id="search" type="text" maxlength="100">
+    <div class="actions">
+      <button id="showAll" data-text="showAll"></button>
+      <button id="hideAll" data-text="hideAll"></button>
+      <button id="refresh" data-text="refresh"></button>
+    </div>
+    <div id="categories"></div>
+    <div id="results"></div>
+  </section>
 </aside>
-<section class="panel">
-<div class="map-head">
-<h2 id="mapTitle"></h2>
-<div class="zoom">
-<button id="zoomOut" aria-label="Zoom out">−</button>
-<span id="zoomValue">100%</span>
-<button id="zoomIn" aria-label="Zoom in">+</button>
-</div>
-</div>
-<div class="filters" id="filters"></div>
-<div id="viewport">
-<div id="board">
-<img id="mapImage" alt="" hidden>
-<svg id="routeSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-<div id="empty">
-<strong data-i18n="emptyTitle"></strong>
-<p data-i18n="emptyText"></p>
-</div>
-<div id="markerLayer"></div>
-</div>
-</div>
-<div class="legend">
-<span><i class="dot" style="background:#c2ee75"></i><span data-i18n="player"></span></span>
-<span><i class="dot" style="background:#f3ca64"></i><span data-i18n="loot"></span></span>
-<span><i class="dot" style="background:#66c6fa"></i><span data-i18n="exit"></span></span>
-<span><i class="dot" style="background:#d0a0fb"></i><span data-i18n="note"></span></span>
-</div>
-<p class="help" data-i18n="liveNotice"></p>
+
+<section class="panel map-panel">
+  <div class="map-head">
+    <h2 id="mapTitle">Farm</h2>
+    <button id="fit" data-text="fit"></button>
+  </div>
+
+  <div id="map"></div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#69caff"></i><span data-text="exit"></span></span>
+    <span><i class="dot" style="background:#ffd369"></i>Safes</span>
+    <span><i class="dot" style="background:#d6a3ff"></i><span data-text="keys"></span></span>
+    <span><i class="dot" style="background:#c2ee75"></i><span data-text="spawns"></span></span>
+  </div>
+
+  <div id="summary"></div>
+  <p class="help" data-text="notice"></p>
 </section>
-</div>
 </main>
-<footer data-i18n="footer"></footer>
+
+<footer>
+  <span data-text="footer"></span> ·
+  <a href="https://github.com/nicolasaigner/ABI-InteractiveMaps"
+     target="_blank" rel="noopener noreferrer">
+    Karten & Daten: Nicolas Aigner / ABI-InteractiveMaps
+  </a> ·
+  <a href="https://github.com/nicolasaigner/ABI-InteractiveMaps/blob/main/LICENSE"
+     target="_blank" rel="noopener noreferrer">MIT</a>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 "use strict";
 
-const translations={
+const $ = id => document.getElementById(id);
+const ROOT =
+  "https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/";
+
+const configs = {
+  farm:{name:"Farm",file:"farm"},
+  valley:{name:"Valley",file:"valley"},
+  armory:{name:"Armory",file:"armory"},
+  tv:{name:"TV Station",file:"tv-station"},
+  northridge:{name:"Northridge"},
+  custom:{name:"Custom"}
+};
+
+const words = {
 de:{
-badge:"MANUELLE KARTENPLANUNG",
-title:"Plane deinen nächsten Raid.",
-intro:"Kartenbilder laden, deine Position markieren und persönliche Routen planen.",
-planning:"Raid-Planung",map:"Karte / Arbeitsbereich",name:"Marker-Beschriftung",
-player:"Position",loot:"Loot",exit:"Ausgang",note:"Notiz",route:"Route",
-inspect:"Ansehen",instructions:"Werkzeug auswählen und auf die Karte tippen. Marker antippen, um ihre Details zu sehen. Eine neue Position ersetzt die vorherige.",
-upload:"Kartenbild laden",imageHelp:"Lade ein eigenes Kartenbild (PNG, JPG oder WebP). Ein anderes Bild setzt die Marker dieses Arbeitsbereichs zurück.",
-markers:"Deine Marker",undo:"Zurück",clear:"Marker löschen",
-emptyTitle:"Dein Karten-Arbeitsbereich",
-emptyText:"Lade zuerst ein Kartenbild. Es sind noch keine echten Spielkarten oder Loot-Daten hinterlegt.",
-emptyList:"Noch keine Marker gesetzt.",
-emptyImage:"Lade zuerst ein Kartenbild.",
-confirmClear:"Alle Marker auf dieser Karte löschen?",
-confirmImage:"Neues Kartenbild laden und bestehende Marker auf dieser Karte zurücksetzen?",
-liveNotice:"Positionen werden manuell gesetzt. Keine Verbindung zum Spiel und keine automatische Live-Ortung. Marker und Kartenbilder werden nur in diesem Browser gespeichert.",
-footer:"Inoffizielles Fanprojekt · Nicht mit den Entwicklern verbunden",
-saved:"Im Browser gespeichert.",storageError:"Speichern fehlgeschlagen. Änderungen sind nur bis zum Neuladen verfügbar.",
-imageError:"Dieses Bild konnte nicht geladen werden.",
-largeImage:"Bitte ein Bild unter 15 MB auswählen.",
-remove:"Entfernen",details:"Marker-Details",imageAlt:"Eigene Planungskarte",
-coordinates:"Bildposition",routePoint:"Routenpunkt"
+  planning:"Eigene Planung",
+  mapLabel:"Karte",
+  name:"Marker-Beschriftung",
+  inspect:"Karte ansehen",
+  player:"Meine Position",
+  note:"Notiz",
+  loot:"Loot",
+  exit:"Ausgang",
+  route:"Route setzen",
+  undo:"Zurück",
+  clearOwn:"Eigene Marker löschen",
+  upload:"Eigenes Kartenbild laden",
+  original:"Originalkarte verwenden",
+  filters:"Marker & Suche",
+  showAll:"Alle zeigen",
+  hideAll:"Alle ausblenden",
+  refresh:"Neu laden",
+  fit:"Ganze Karte",
+  keys:"Schlüsseltüren",
+  spawns:"Spawnpunkte",
+  instructions:"Karte verschieben und mit zwei Fingern zoomen. Für eigene Marker ein Werkzeug wählen und auf die Karte tippen. Eigene Marker lassen sich verschieben.",
+  notice:"Community-Standorte, keine Live-Ortung. Ausgänge können Bedingungen haben und Loot ist nicht garantiert. Missionspunkte fehlen in dieser Quelle. Details aus der Quelle erscheinen auf Englisch.",
+  footer:"Inoffizielles Fanprojekt",
+  loading:"Karte und Marker werden geladen …",
+  missing:"Für diese Karte bitte ein eigenes Bild hochladen.",
+  failed:"Kartenbild konnte nicht geladen werden. Tippe auf „Neu laden“.",
+  dataFailed:"Karte geladen, aber Markerdaten fehlen. Tippe auf „Neu laden“.",
+  ready:"Karte geladen.",
+  customReady:"Eigenes Bild geladen. Community-Marker werden darauf ausgeblendet.",
+  saved:"Eigene Planung im Browser gespeichert.",
+  saveFailed:"Speichern fehlgeschlagen. Änderungen bleiben nur bis zum Neuladen erhalten.",
+  libraryFailed:"Kartenbibliothek konnte nicht geladen werden. Bitte die Seite neu laden.",
+  delete:"Marker entfernen",
+  confirmClear:"Alle eigenen Marker dieser Karte löschen?",
+  confirmImage:"Das Kartenbild wechseln und eigene Marker dieser Karte löschen?",
+  uploadFailed:"Bild konnte nicht geladen werden. Bitte PNG, JPG oder WebP unter 15 MB wählen.",
+  source:"Community-Daten; Angaben können veraltet sein.",
+  own:"Eigener Marker · manuell gesetzt",
+  visible:"sichtbare Community-Marker",
+  personal:"eigene Marker",
+  search:"Suchen: Safe, Motel, Key …",
+  noResults:"Keine Treffer.",
+  limited:"Die ersten 60 Treffer werden angezeigt.",
+  empty:"Lade zuerst eine Karte.",
+  routePoint:"Routenpunkt",
+  custom:"Eigene Karte"
 },
 en:{
-badge:"MANUAL MAP PLANNING",
-title:"Plan your next raid.",
-intro:"Upload map images, mark your position and plan personal routes.",
-planning:"Raid planning",map:"Map / workspace",name:"Marker label",
-player:"Position",loot:"Loot",exit:"Extraction",note:"Note",route:"Route",
-inspect:"Inspect",instructions:"Select a tool and tap the map. Tap markers to view details. A new position replaces the previous one.",
-upload:"Upload map image",imageHelp:"Upload your own map image (PNG, JPG or WebP). Replacing it resets this workspace's markers.",
-markers:"Your markers",undo:"Undo",clear:"Clear markers",
-emptyTitle:"Your map workspace",
-emptyText:"Upload a map image first. No actual game maps or loot data have been added yet.",
-emptyList:"No markers yet.",emptyImage:"Upload a map image first.",
-confirmClear:"Delete all markers on this map?",
-confirmImage:"Replace the map image and reset this map's existing markers?",
-liveNotice:"Positions are set manually. No game connection or automatic live tracking. Markers and map images are stored only in this browser.",
-footer:"Unofficial fan project · Not affiliated with the developers",
-saved:"Saved in this browser.",storageError:"Saving failed. Changes are available only until this page reloads.",
-imageError:"This image could not be loaded.",largeImage:"Please select an image under 15 MB.",
-remove:"Remove",details:"Marker details",imageAlt:"Custom planning map",
-coordinates:"Image position",routePoint:"Route point"
+  planning:"Personal planning",
+  mapLabel:"Map",
+  name:"Marker label",
+  inspect:"Explore map",
+  player:"My position",
+  note:"Note",
+  loot:"Loot",
+  exit:"Extraction",
+  route:"Add route point",
+  undo:"Undo",
+  clearOwn:"Clear personal markers",
+  upload:"Upload custom map",
+  original:"Use source map",
+  filters:"Markers & search",
+  showAll:"Show all",
+  hideAll:"Hide all",
+  refresh:"Reload",
+  fit:"Fit map",
+  keys:"Key rooms",
+  spawns:"Spawn points",
+  instructions:"Drag the map and pinch to zoom. Select a tool and tap the map to add personal markers. Personal markers can be dragged.",
+  notice:"Community locations, no live tracking. Extractions may have requirements and loot is not guaranteed. This source has no mission locations. Source details are shown in English.",
+  footer:"Unofficial fan project",
+  loading:"Loading map and markers …",
+  missing:"Please upload a custom image for this map.",
+  failed:"Map image could not load. Tap “Reload”.",
+  dataFailed:"Map loaded, but marker data is unavailable. Tap “Reload”.",
+  ready:"Map loaded.",
+  customReady:"Custom map loaded. Community markers are hidden on custom images.",
+  saved:"Personal planning saved in this browser.",
+  saveFailed:"Saving failed. Changes last only until the page reloads.",
+  libraryFailed:"Map library could not load. Please reload the page.",
+  delete:"Remove marker",
+  confirmClear:"Delete all personal markers on this map?",
+  confirmImage:"Change the map image and delete personal markers on this map?",
+  uploadFailed:"Image could not load. Please choose PNG, JPG or WebP under 15 MB.",
+  source:"Community data; details may be outdated.",
+  own:"Personal marker · set manually",
+  visible:"visible community markers",
+  personal:"personal markers",
+  search:"Search: Safe, Motel, Key …",
+  noResults:"No results.",
+  limited:"Showing the first 60 results.",
+  empty:"Load a map first.",
+  routePoint:"Route point",
+  custom:"Custom map"
 }
 };
 
-const $=id=>document.getElementById(id);
-const types=["player","loot","exit","note","route"];
-const symbols={player:"P",loot:"L",exit:"E",note:"N"};
-const key="abi-companion-planner-v1";
-let lang="de",selected="farm",tool="inspect",zoom=1;
-let maps={},history={};
-const visible=new Set(types);
-const t=k=>translations[lang][k]||k;
-
-try{
-const saved=JSON.parse(localStorage.getItem(key)||"null");
-if(saved&&typeof saved==="object"){
-lang=saved.lang==="en"?"en":"de";
-if(saved.maps&&typeof saved.maps==="object"){
-for(const [id,value] of Object.entries(saved.maps)){
-if(!value||typeof value!=="object")continue;
-maps[id]={
-image:typeof value.image==="string"&&/^data:image\/(png|jpeg|webp);base64,/.test(value.image)?value.image:"",
-ratio:Number.isFinite(value.ratio)&&value.ratio>0?value.ratio:1,
-markers:Array.isArray(value.markers)?value.markers.filter(m=>
-m&&types.includes(m.type)&&typeof m.id==="string"&&
-Number.isFinite(m.x)&&Number.isFinite(m.y)&&
-m.x>=0&&m.x<=100&&m.y>=0&&m.y<=100
-).map(m=>({...m,name:String(m.name||"").slice(0,80)})):[]
+const german = {
+  "Player Spawn":"Spieler-Spawn",
+  "Player spawn (Lockdown)":"Spieler-Spawn (Lockdown)",
+  "Extraction Point":"Ausgänge",
+  "Key Rooms":"Schlüsseltüren",
+  "Safe":"Safes",
+  "Air Drop":"Airdrops",
+  "SCAV SNIPER":"Scav-Scharfschützen",
+  "Scav Sniper":"Scav-Scharfschützen",
+  "Military Supply Case":"Militärkisten",
+  "Military Supply Crate":"Militärkisten",
+  "Weapon Box":"Waffenkisten",
+  "Weapons":"Waffen",
+  "Document Case":"Dokumentenkoffer",
+  "Filing Cabinet":"Aktenschränke",
+  "Storage Case":"Lagerkisten",
+  "Computer":"Computer",
+  "Toolbox":"Werkzeugkisten",
+  "Ammo Box":"Munitionskisten",
+  "Grenade Box":"Granatenkisten",
+  "Duffle Bag":"Sporttaschen",
+  "Jacket":"Jacken",
+  "Suitcase":"Koffer",
+  "Medical":"Medizin",
+  "Cash Register":"Kassen",
+  "Extraction Lever":"Ausgangshebel",
+  "Switch":"Schalter"
 };
+
+const STORAGE = "abi-companion-planner-v1";
+const PREFS = "abi-interactive-preferences-v1";
+const ownTypes = ["player","note","loot","exit","route"];
+
+let lang = "de";
+let selected = "farm";
+let tool = "inspect";
+let storedMaps = {};
+let hidden = new Set();
+let undoStacks = {};
+let leafletMap, imageLayer, communityLayer, ownLayer;
+let bounds, currentData = null, requestId = 0;
+let statusKey = "loading";
+let loading = false;
+const dataCache = new Map();
+
+try {
+  const saved = JSON.parse(localStorage.getItem(STORAGE) || "null");
+  if(saved && typeof saved === "object"){
+    lang = saved.lang === "en" ? "en" : "de";
+    for(const [id,s] of Object.entries(saved.maps || {})){
+      if(!configs[id] || !s || typeof s !== "object") continue;
+
+      const image =
+        typeof s.image === "string" &&
+        /^data:image\/(png|jpeg|webp);base64,/.test(s.image)
+          ? s.image : "";
+
+      storedMaps[id] = {
+        image,
+        ratio:Number.isFinite(s.ratio) && s.ratio > 0 ? s.ratio : 1,
+        markers:Array.isArray(s.markers) ? s.markers.filter(m =>
+          m && ownTypes.includes(m.type) &&
+          typeof m.id === "string" &&
+          Number.isFinite(m.x) && Number.isFinite(m.y) &&
+          m.x >= 0 && m.x <= 100 && m.y >= 0 && m.y <= 100
+        ).map(m => ({
+          ...m,
+          name:String(m.name || "").slice(0,80)
+        })) : []
+      };
+    }
+  }
+} catch(e){}
+
+try {
+  const prefs = JSON.parse(localStorage.getItem(PREFS) || "{}");
+  if(configs[prefs.selected]) selected = prefs.selected;
+  if(Array.isArray(prefs.hidden)){
+    hidden = new Set(prefs.hidden.filter(x => typeof x === "string"));
+  }
+} catch(e){}
+
+function t(key){ return words[lang][key] || key; }
+
+function categoryName(name){
+  return lang === "de" ? german[name] || name : name;
 }
-}
-}
-}catch(e){}
 
 function state(){
-if(!maps[selected])maps[selected]={image:"",ratio:1,markers:[]};
-return maps[selected];
+  if(!storedMaps[selected]){
+    storedMaps[selected] = {image:"",ratio:1,markers:[]};
+  }
+  return storedMaps[selected];
 }
+
+function setStatus(key){
+  statusKey = key;
+  $("status").textContent = t(key);
+}
+
+function savePrefs(){
+  try {
+    localStorage.setItem(PREFS,JSON.stringify({
+      selected,hidden:[...hidden]
+    }));
+  } catch(e){}
+}
+
 function save(){
-try{
-localStorage.setItem(key,JSON.stringify({lang,maps}));
-$("status").textContent=t("saved");
-}catch(e){
-$("status").textContent=t("storageError");
-}
-}
-function checkpoint(){
-if(!history[selected])history[selected]=[];
-history[selected].push(state().markers.map(m=>({...m})));
-if(history[selected].length>30)history[selected].shift();
-}
-function removeMarker(id){
-checkpoint();
-state().markers=state().markers.filter(m=>m.id!==id);
-save();render();
-}
-function render(){
-document.documentElement.lang=lang;
-document.querySelectorAll("[data-i18n]").forEach(el=>{
-el.textContent=t(el.dataset.i18n);
-});
-$("language").textContent=lang==="de"?"EN":"DE";
-$("markerName").placeholder=lang==="de"?"z. B. Treffpunkt":"e.g. Meeting point";
-$("mapTitle").textContent=$("mapSelect").selectedOptions[0].textContent;
-document.querySelectorAll("[data-tool]").forEach(b=>{
-b.classList.toggle("active",b.dataset.tool===tool);
-b.setAttribute("aria-pressed",String(b.dataset.tool===tool));
-});
-$("filters").replaceChildren();
-types.forEach(type=>{
-const label=document.createElement("label");
-const input=document.createElement("input");
-input.type="checkbox";input.checked=visible.has(type);
-input.addEventListener("change",()=>{
-input.checked?visible.add(type):visible.delete(type);render();
-});
-label.append(input,document.createTextNode(" "+t(type)));
-$("filters").append(label);
-});
-const s=state();
-$("board").style.width=(zoom*100)+"%";
-$("board").style.aspectRatio=String(s.ratio);
-$("zoomValue").textContent=Math.round(zoom*100)+"%";
-$("mapImage").hidden=!s.image;
-if(s.image)$("mapImage").src=s.image;
-else $("mapImage").removeAttribute("src");
-$("mapImage").alt=t("imageAlt");
-$("empty").style.display=s.image?"none":"grid";
-$("markerLayer").replaceChildren();
-$("markerList").replaceChildren();
-$("routeSvg").replaceChildren();
-const route=s.markers.filter(m=>m.type==="route");
-if(visible.has("route")&&route.length>1){
-const line=document.createElementNS("http://www.w3.org/2000/svg","polyline");
-line.setAttribute("points",route.map(m=>`${m.x},${m.y}`).join(" "));
-line.setAttribute("fill","none");
-line.setAttribute("stroke","#c2ee75");
-line.setAttribute("stroke-width","3");
-line.setAttribute("vector-effect","non-scaling-stroke");
-$("routeSvg").append(line);
-}
-if(!s.markers.length){
-const p=document.createElement("p");p.textContent=t("emptyList");
-$("markerList").append(p);
-}
-s.markers.forEach(m=>{
-const routeIndex=route.findIndex(r=>r.id===m.id)+1;
-const label=m.name||(m.type==="route"?t("routePoint")+" "+routeIndex:t(m.type));
-if(visible.has(m.type)){
-const b=document.createElement("button");
-b.className="marker "+m.type;
-b.style.left=m.x+"%";b.style.top=m.y+"%";
-b.textContent=m.type==="route"?routeIndex:symbols[m.type];
-b.title=label;b.setAttribute("aria-label",label);
-b.addEventListener("click",e=>{
-e.stopPropagation();
-alert(label+"\n"+t(m.type)+"\n"+t("coordinates")+": "+m.x.toFixed(1)+"%, "+m.y.toFixed(1)+"%");
-});
-$("markerLayer").append(b);
-}
-const row=document.createElement("div");row.className="row";
-const text=document.createElement("span");text.textContent=label;
-const small=document.createElement("small");
-small.textContent=t(m.type)+" · "+m.x.toFixed(1)+"%, "+m.y.toFixed(1)+"%";
-text.append(small);
-const del=document.createElement("button");del.textContent="×";
-del.setAttribute("aria-label",t("remove")+": "+label);
-del.addEventListener("click",()=>removeMarker(m.id));
-row.append(text,del);$("markerList").append(row);
-});
-$("undo").disabled=!(history[selected]&&history[selected].length);
-$("clear").disabled=!s.markers.length;
-}
-
-$("language").addEventListener("click",()=>{
-lang=lang==="de"?"en":"de";save();render();
-});
-$("mapSelect").addEventListener("change",()=>{
-selected=$("mapSelect").value;zoom=1;$("status").textContent="";render();
-});
-document.querySelectorAll("[data-tool]").forEach(b=>{
-b.addEventListener("click",()=>{tool=b.dataset.tool;render();});
-});
-$("board").addEventListener("click",e=>{
-if(tool==="inspect")return;
-if(!state().image){$("status").textContent=t("emptyImage");return;}
-const rect=$("board").getBoundingClientRect();
-const x=Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100));
-const y=Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100));
-checkpoint();
-if(tool==="player")state().markers=state().markers.filter(m=>m.type!=="player");
-state().markers.push({
-id:Date.now().toString(36)+Math.random().toString(36).slice(2),
-type:tool,x,y,name:$("markerName").value.trim()
-});
-save();render();
-});
-$("zoomIn").addEventListener("click",()=>{zoom=Math.min(3,zoom+.25);render();});
-$("zoomOut").addEventListener("click",()=>{zoom=Math.max(1,zoom-.25);render();});
-$("undo").addEventListener("click",()=>{
-if(history[selected]?.length){
-state().markers=history[selected].pop();save();render();
-}
-});
-$("clear").addEventListener("click",()=>{
-if(state().markers.length&&confirm(t("confirmClear"))){
-checkpoint();state().markers=[];save();render();
-}
-});
-$("imageInput").addEventListener("change",async e=>{
-const file=e.target.files[0];
-e.target.value="";
-if(!file)return;
-if(!["image/png","image/jpeg","image/webp"].includes(file.type)){
-$("status").textContent=t("imageError");return;
-}
-if(file.size>15*1024*1024){
-$("status").textContent=t("largeImage");return;
-}
-const targetMap=selected;
-if(state().markers.length&&!confirm(t("confirmImage")))return;
-const url=URL.createObjectURL(file);
-try{
-const img=new Image();
-await new Promise((resolve,reject)=>{
-img.onload=resolve;img.onerror=reject;img.src=url;
-});
-const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
-const canvas=document.createElement("canvas");
-canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
-canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
-const ctx=canvas.getContext("2d");
-ctx.fillStyle="#101613";ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.drawImage(img,0,0,canvas.width,canvas.height);
-maps[targetMap]={
-image:canvas.toDataURL("image/jpeg",.85),
-ratio:canvas.width/canvas.height,
-markers:[]
-};
-history[targetMap]=[];
-save();render();
-}catch(err){
-$("status").textContent=t("imageError");
-}finally{
-URL.revokeObjectURL(url);
-}
-});
-render();
-</script>
-<script>
-(() => {
-  "use strict";
-
-  const base =
-    "https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/maps/";
-
-  const automaticMaps = {
-    farm: base + "farm.png",
-    valley: base + "valley.png",
-    armory: base + "armory.png",
-    tv: base + "tv-station.png"
-  };
-
-  const pending = new Map();
-  const failures = new Set();
-
-  const messages = {
-    de: {
-      loading: "Kartenbild wird automatisch geladen …",
-      loaded: "Community-Kartenbild geladen. Positionen bleiben manuell.",
-      failed: "Karte konnte nicht geladen werden. Tippe auf „Karte erneut laden“.",
-      missing: "Für diese Karte ist noch kein automatisches Bild hinterlegt.",
-      retry: "Karte erneut laden",
-      source: "Kartenquelle: Nicolas Aigner / ABI-InteractiveMaps",
-      sourceNote: "Community-Karten können vom aktuellen Spielstand abweichen."
-    },
-    en: {
-      loading: "Loading map image automatically …",
-      loaded: "Community map image loaded. Positions remain manual.",
-      failed: "Map could not load. Tap “Retry map loading”.",
-      missing: "No automatic image is available for this map yet.",
-      retry: "Retry map loading",
-      source: "Map source: Nicolas Aigner / ABI-InteractiveMaps",
-      sourceNote: "Community maps may differ from the current game."
-    }
-  };
-
-  translations.de.imageHelp =
-    "Farm, Valley, Armory und TV Station laden automatisch. Eigene Kartenbilder bleiben erhalten.";
-  translations.en.imageHelp =
-    "Farm, Valley, Armory and TV Station load automatically. Your custom map images are preserved.";
-
-  translations.de.emptyText =
-    "Verfügbare Kartenbilder werden automatisch geladen. Alternativ kannst du ein eigenes Bild auswählen.";
-  translations.en.emptyText =
-    "Available map images load automatically. You can also upload your own image.";
-
-  const retryButton = document.createElement("button");
-  retryButton.type = "button";
-  retryButton.style.marginTop = "10px";
-  $("status").after(retryButton);
-
-  const credits = document.createElement("div");
-  credits.style.cssText =
-    "margin-top:14px;font-size:12px;color:#9cad9f;line-height:1.6";
-
-  const sourceLink = document.createElement("a");
-  sourceLink.href =
-    "https://github.com/nicolasaigner/ABI-InteractiveMaps";
-  sourceLink.target = "_blank";
-  sourceLink.rel = "noopener noreferrer";
-  sourceLink.style.color = "#c2ee75";
-
-  const licenseLink = document.createElement("a");
-  licenseLink.href =
-    "https://github.com/nicolasaigner/ABI-InteractiveMaps/blob/main/LICENSE";
-  licenseLink.target = "_blank";
-  licenseLink.rel = "noopener noreferrer";
-  licenseLink.textContent = "MIT";
-  licenseLink.style.color = "#c2ee75";
-
-  const sourceNote = document.createElement("div");
-
-  credits.append(
-    sourceLink,
-    document.createTextNode(" · "),
-    licenseLink,
-    sourceNote
-  );
-
-  $("viewport").parentElement.append(credits);
-
-  function updateLabels() {
-    const text = messages[lang];
-    retryButton.textContent = text.retry;
-    retryButton.hidden = !automaticMaps[selected];
-    retryButton.disabled = pending.has(selected);
-    sourceLink.textContent = text.source;
-    sourceNote.textContent = text.sourceNote;
+  try {
+    localStorage.setItem(STORAGE,JSON.stringify({
+      lang,maps:storedMaps
+    }));
+    savePrefs();
+    setStatus("saved");
+  } catch(e){
+    setStatus("saveFailed");
   }
+}
 
-  function loadImage(url) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
+function snapshot(){
+  const stack = undoStacks[selected] ||= [];
+  stack.push(state().markers.map(m => ({...m})));
+  if(stack.length > 30) stack.shift();
+}
 
-      const timer = setTimeout(() => {
-        img.onload = null;
-        img.onerror = null;
-        img.src = "";
-        reject(new Error("Timeout"));
-      }, 60000);
+function translate(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-text]").forEach(el => {
+    el.textContent = t(el.dataset.text);
+  });
+  $("language").textContent = lang === "de" ? "EN" : "DE";
+  $("search").placeholder = t("search");
+  $("search").setAttribute("aria-label",t("search"));
+  $("markerName").placeholder = lang === "de"
+    ? "z. B. Treffpunkt" : "e.g. Meeting point";
 
-      img.onload = () => {
-        clearTimeout(timer);
-        resolve(img);
-      };
+  $("mapSelect").querySelector('[value="northridge"]').textContent =
+    lang === "de" ? "Northridge · eigenes Bild" : "Northridge · custom image";
 
-      img.onerror = () => {
-        clearTimeout(timer);
-        reject(new Error("Image unavailable"));
-      };
+  $("mapSelect").querySelector('[value="custom"]').textContent = t("custom");
 
-      img.src = url;
-    });
-  }
+  $("mapTitle").textContent =
+    selected === "custom" ? t("custom") : configs[selected].name;
 
-  async function ensureMap(force = false) {
-    const id = selected;
-    const current = state();
-    const url = automaticMaps[id];
+  $("status").textContent = t(statusKey);
 
-    updateLabels();
-
-    if (!url) {
-      if (!current.image) {
-        $("status").textContent = messages[lang].missing;
-      }
-      return;
-    }
-
-    // Preserve uploaded images and existing markers.
-    if (current.image && current.image !== url) return;
-
-    if (pending.has(id)) {
-      $("status").textContent = messages[lang].loading;
-      return;
-    }
-
-    if (current.image === url && !force) {
-      $("status").textContent = messages[lang].loaded;
-      return;
-    }
-
-    if (failures.has(id) && !force) {
-      $("status").textContent = messages[lang].failed;
-      return;
-    }
-
-    const originalImage = current.image;
-    pending.set(id, true);
-    failures.delete(id);
-
-    $("status").textContent = messages[lang].loading;
-    updateLabels();
-
-    try {
-      const img = await loadImage(url);
-
-      // Do not overwrite an image uploaded while loading.
-      if (maps[id] !== current ||
-          current.image !== originalImage) {
-        return;
-      }
-
-      current.image = url;
-      current.ratio = img.naturalWidth / img.naturalHeight;
-
-      if (selected === id) {
-        render();
-        $("status").textContent = messages[lang].loaded;
-      }
-    } catch (error) {
-      failures.add(id);
-
-      if (selected === id && current.image === originalImage) {
-        $("status").textContent = messages[lang].failed;
-      }
-    } finally {
-      pending.delete(id);
-      updateLabels();
-    }
-  }
-
-  retryButton.addEventListener("click", () => ensureMap(true));
-
-  $("mapSelect").addEventListener("change", () => ensureMap());
-
-  $("language").addEventListener("click", () => {
-    updateLabels();
-    ensureMap();
+  document.querySelectorAll("[data-tool]").forEach(b => {
+    const active = b.dataset.tool === tool;
+    b.classList.toggle("active",active);
+    b.setAttribute("aria-pressed",String(active));
   });
 
-  updateLabels();
-  render();
-  ensureMap();
-})();
-</script>
-<script>
-(() => {
-  "use strict";
+  $("original").hidden = !configs[selected].file || !state().image;
+  $("refresh").disabled = loading;
+  $("undo").disabled = !(undoStacks[selected]?.length);
+  $("clearOwn").disabled = !state().markers.length;
+}
 
-  const root =
-    "https://raw.githubusercontent.com/nicolasaigner/ABI-InteractiveMaps/main/public/";
+function appearance(name){
+  const n = name.toLowerCase();
+  if(n.includes("extraction point")) return ["E","#69caff"];
+  if(n.includes("safe")) return ["S","#ffd369"];
+  if(n.includes("key")) return ["K","#d6a3ff"];
+  if(n.includes("spawn")) return ["P","#c2ee75"];
+  if(n.includes("scav") || n.includes("sniper")) return ["!","#ff8989"];
+  if(n.includes("switch") || n.includes("lever")) return ["↔","#88e3e0"];
+  if(n.includes("medical")) return ["+","#9be3b1"];
+  if(n.includes("weapon")) return ["W","#edbf88"];
+  if(n.includes("ammo")) return ["A","#edbf88"];
+  if(n.includes("air drop")) return ["D","#f8b6de"];
+  return ["L","#c5cbd0"];
+}
 
-  const files = {
-    farm: "farm",
-    valley: "valley",
-    armory: "armory",
-    tv: "tv-station"
-  };
+function icon(symbol,color,personal=false){
+  const span = document.createElement("span");
+  span.textContent = symbol;
+  span.style.background = color;
 
-  const datasets = new Map();
-  const loading = new Set();
-  const errors = new Set();
-  const hiddenCategories = new Set();
-  let search = "";
+  return L.divIcon({
+    html:span,
+    className:"poi-icon" + (personal ? " own-icon" : ""),
+    iconSize:personal ? [29,29] : [25,25],
+    iconAnchor:personal ? [14.5,14.5] : [12.5,12.5],
+    popupAnchor:[0,-14]
+  });
+}
 
-  const german = {
-    "Player Spawn": "Spieler-Spawn",
-    "Player spawn (Lockdown)": "Spieler-Spawn (Lockdown)",
-    "Extraction Point": "Ausgänge",
-    "Key Rooms": "Schlüsseltüren",
-    "Safe": "Safes",
-    "Air Drop": "Airdrops",
-    "SCAV SNIPER": "Scav-Scharfschützen",
-    "Scav Sniper": "Scav-Scharfschützen",
-    "Military Supply Case": "Militär-Versorgungskisten",
-    "Military Supply Crate": "Militär-Versorgungskisten",
-    "Weapon Box": "Waffenkisten",
-    "Weapons": "Waffen",
-    "Document Case": "Dokumentenkoffer",
-    "Filing Cabinet": "Aktenschränke",
-    "Storage Case": "Lagerkisten",
-    "Computer": "Computer",
-    "Toolbox": "Werkzeugkisten",
-    "Ammo Box": "Munitionskisten",
-    "Grenade Box": "Granatenkisten",
-    "Duffle Bag": "Sporttaschen",
-    "Jacket": "Jacken",
-    "Suitcase": "Koffer",
-    "Medical": "Medizin",
-    "Cash Register": "Kassen",
-    "Extraction Lever": "Ausgangshebel",
-    "Switch": "Schalter"
-  };
+function popup(title,description,category,personalId){
+  const box = document.createElement("div");
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  box.append(heading);
 
-  const text = (de, en) => lang === "de" ? de : en;
-  const categoryName = name =>
-    lang === "de" ? german[name] || name : name;
-
-  const css = document.createElement("style");
-  css.textContent = `
-    #communityLayer {
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-    }
-    .community-marker {
-      position:absolute;
-      transform:translate(-50%,-50%);
-      width:23px;
-      height:23px;
-      padding:0;
-      display:grid;
-      place-items:center;
-      border:1px solid #ffffffbb;
-      border-radius:6px;
-      color:#101510;
-      font-size:12px;
-      font-weight:800;
-      line-height:1;
-      pointer-events:auto;
-      box-shadow:0 2px 5px #0009;
-      z-index:1;
-    }
-    .community-marker:hover,
-    .community-marker:focus-visible {
-      z-index:5;
-      outline:2px solid white;
-      transform:translate(-50%,-50%) scale(1.25);
-    }
-    #communityFilters {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:9px;
-      margin:14px 0;
-      max-height:320px;
-      overflow:auto;
-    }
-    #communityFilters label {
-      font-size:12px;
-      color:#b9c7ba;
-      display:flex;
-      align-items:flex-start;
-      gap:5px;
-    }
-    #communityInfo {
-      font-size:12px;
-      line-height:1.6;
-      color:#c2ee75;
-      margin-top:12px;
-    }
-    #communityPanel input[type=text] {
-      margin:12px 0 0;
-    }
-  `;
-  document.head.append(css);
-
-  const layer = document.createElement("div");
-  layer.id = "communityLayer";
-  $("board").append(layer);
-
-  const panel = document.createElement("section");
-  panel.id = "communityPanel";
-  panel.className = "panel list";
-
-  const heading = document.createElement("h2");
-
-  const searchInput = document.createElement("input");
-  searchInput.type = "text";
-  searchInput.maxLength = 100;
-
-  const actions = document.createElement("div");
-  actions.className = "actions";
-
-  const allButton = document.createElement("button");
-  const noneButton = document.createElement("button");
-  const reloadButton = document.createElement("button");
-
-  allButton.type = noneButton.type = reloadButton.type = "button";
-  actions.append(allButton, noneButton, reloadButton);
-
-  const filters = document.createElement("div");
-  filters.id = "communityFilters";
-
-  const info = document.createElement("div");
-  info.id = "communityInfo";
-  info.setAttribute("role", "status");
-
-  const notice = document.createElement("p");
-  notice.className = "help";
-
-  panel.append(
-    heading,
-    searchInput,
-    actions,
-    filters,
-    info,
-    notice
-  );
-
-  document.querySelector("aside").append(panel);
-
-  function appearance(name) {
-    const n = name.toLowerCase();
-
-    if (n.includes("extraction point")) {
-      return { symbol: "E", color: "#67caff" };
-    }
-    if (n.includes("safe")) {
-      return { symbol: "S", color: "#ffd369" };
-    }
-    if (n.includes("key")) {
-      return { symbol: "K", color: "#d6a3ff" };
-    }
-    if (n.includes("spawn")) {
-      return { symbol: "P", color: "#c2ee75" };
-    }
-    if (n.includes("sniper") || n.includes("scav")) {
-      return { symbol: "!", color: "#ff8989" };
-    }
-    if (n.includes("switch") || n.includes("lever")) {
-      return { symbol: "↔", color: "#88e3e0" };
-    }
-    if (n.includes("medical")) {
-      return { symbol: "+", color: "#9be3b1" };
-    }
-    if (n.includes("weapon")) {
-      return { symbol: "W", color: "#edbf88" };
-    }
-    if (n.includes("ammo")) {
-      return { symbol: "A", color: "#edbf88" };
-    }
-    if (n.includes("air drop")) {
-      return { symbol: "D", color: "#f8b6de" };
-    }
-    return { symbol: "L", color: "#c5cbd0" };
+  if(category){
+    const p = document.createElement("p");
+    p.textContent = category;
+    box.append(p);
   }
 
-  function isSourceMap() {
-    const file = files[selected];
-
-    return Boolean(
-      file &&
-      state().image === root + "maps/" + file + ".png"
-    );
+  if(description){
+    const p = document.createElement("p");
+    p.textContent = description;
+    box.append(p);
   }
 
-  function drawCommunity() {
-    heading.textContent = text(
-      "Automatische Kartenmarker",
-      "Automatic map markers"
-    );
+  const small = document.createElement("small");
+  small.textContent = personalId ? t("own") : t("source");
+  box.append(small);
 
-    searchInput.placeholder = text(
-      "Suchen: Safe, Motel, Schlüssel …",
-      "Search: Safe, Motel, Key …"
-    );
+  if(personalId){
+    const button = document.createElement("button");
+    button.textContent = t("delete");
 
-    searchInput.setAttribute(
-      "aria-label",
-      text("Kartenmarker suchen", "Search map markers")
-    );
-
-    allButton.textContent = text("Alle zeigen", "Show all");
-    noneButton.textContent = text("Alle ausblenden", "Hide all");
-    reloadButton.textContent = text("Aktualisieren", "Refresh");
-    reloadButton.disabled = loading.has(selected) || !files[selected];
-
-    notice.textContent = text(
-      "Community-Standorte, keine Live-Daten. Ausgänge können Bedingungen haben; Loot ist nicht garantiert. Missionspunkte fehlen in dieser Quelle. Marker antippen für Details.",
-      "Community locations, not live data. Extractions may have requirements; loot is not guaranteed. This source has no mission locations. Tap markers for details."
-    );
-
-    layer.replaceChildren();
-    filters.replaceChildren();
-
-    const data = datasets.get(selected);
-
-    if (!files[selected]) {
-      info.textContent = text(
-        "Für diese Karte liegen noch keine Markerdaten vor.",
-        "No marker data is available for this map yet."
-      );
-      return;
-    }
-
-    if (!data) {
-      info.textContent = errors.has(selected)
-        ? text(
-            "Laden fehlgeschlagen. Tippe auf „Aktualisieren“.",
-            "Loading failed. Tap “Refresh”."
-          )
-        : text(
-            "Markerdaten werden geladen …",
-            "Loading marker data …"
-          );
-      return;
-    }
-
-    const categories = new Map(
-      data.categories.map(c => [String(c.id), c])
-    );
-
-    const counts = new Map();
-    data.markers.forEach(m => {
-      const id = String(m.categoryId);
-      counts.set(id, (counts.get(id) || 0) + 1);
+    button.addEventListener("click",() => {
+      snapshot();
+      state().markers = state().markers.filter(m => m.id !== personalId);
+      save();
+      drawOwn();
     });
 
-    data.categories.forEach(c => {
-      const id = String(c.id);
-      const label = document.createElement("label");
-      const box = document.createElement("input");
+    box.append(document.createElement("br"),button);
+  }
 
-      box.type = "checkbox";
-      box.checked = !hiddenCategories.has(c.name);
+  return box;
+}
 
-      box.addEventListener("change", () => {
-        if (box.checked) hiddenCategories.delete(c.name);
-        else hiddenCategories.add(c.name);
+function positionToLatLng(m){
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
 
-        drawCommunity();
-      });
+  return [
+    ne.lat - m.y / 100 * (ne.lat - sw.lat),
+    sw.lng + m.x / 100 * (ne.lng - sw.lng)
+  ];
+}
 
-      label.append(
-        box,
-        document.createTextNode(
-          categoryName(c.name) + " (" + (counts.get(id) || 0) + ")"
-        )
-      );
+function latLngToPosition(latlng){
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
 
-      filters.append(label);
+  return {
+    x:Math.max(0,Math.min(100,
+      (latlng.lng - sw.lng)/(ne.lng-sw.lng)*100)),
+    y:Math.max(0,Math.min(100,
+      (ne.lat-latlng.lat)/(ne.lat-sw.lat)*100))
+  };
+}
+
+function updateSummary(count){
+  $("summary").textContent =
+    count + " " + t("visible") + " · " +
+    state().markers.length + " " + t("personal");
+}
+
+function buildFilters(){
+  $("categories").replaceChildren();
+  if(!currentData) return;
+
+  const counts = new Map();
+  currentData.markers.forEach(m => {
+    const id = String(m.categoryId);
+    counts.set(id,(counts.get(id)||0)+1);
+  });
+
+  currentData.categories.forEach(c => {
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !hidden.has(c.name);
+
+    checkbox.addEventListener("change",() => {
+      if(checkbox.checked) hidden.delete(c.name);
+      else hidden.add(c.name);
+      savePrefs();
+      drawCommunity();
     });
 
-    if (!isSourceMap()) {
-      info.textContent = text(
-        "Marker erscheinen auf dem automatisch geladenen Original-Kartenbild. Auf eigenen Bildern werden sie zur Vermeidung falscher Positionen ausgeblendet.",
-        "Markers appear on the automatically loaded source map. They are hidden on custom images to avoid incorrect positions."
-      );
-      return;
-    }
+    label.append(
+      checkbox,
+      document.createTextNode(
+        categoryName(c.name) + " (" +
+        (counts.get(String(c.id))||0) + ")"
+      )
+    );
 
-    const [[minX, minY], [maxX, maxY]] = data.mapBounds;
-    const width = maxX - minX;
-    const height = maxY - minY;
-    const query = search.trim().toLowerCase();
-    let shown = 0;
+    $("categories").append(label);
+  });
+}
 
-    const fragment = document.createDocumentFragment();
+function drawCommunity(){
+  if(!communityLayer) return;
+  communityLayer.clearLayers();
+  $("results").replaceChildren();
 
-    data.markers.forEach(m => {
-      const category = categories.get(String(m.categoryId));
-      if (!category || hiddenCategories.has(category.name)) return;
+  let count = 0;
+  const query = $("search").value.trim().toLowerCase();
+  const matches = [];
+
+  if(currentData && !state().image && imageLayer){
+    const cats = new Map(
+      currentData.categories.map(c => [String(c.id),c])
+    );
+
+    currentData.markers.forEach(m => {
+      const category = cats.get(String(m.categoryId));
+      if(!category || hidden.has(category.name)) return;
 
       const title = String(m.popup?.title || category.name);
       const description = String(m.popup?.description || "");
 
       const searchable = [
-        title,
-        description,
-        category.name,
-        categoryName(category.name)
+        title,description,category.name,categoryName(category.name)
       ].join(" ").toLowerCase();
 
-      if (query && !searchable.includes(query)) return;
+      if(query && !searchable.includes(query)) return;
 
-      const [sourceX, sourceY] = m.position;
-      const x = (sourceX - minX) / width * 100;
+      const latlng = L.latLng(m.position[1],m.position[0]);
+      if(!bounds.contains(latlng)) return;
 
-      // Source coordinates start at the bottom left.
-      // CSS coordinates start at the top left.
-      const y = 100 - (sourceY - minY) / height * 100;
+      const [symbol,color] = appearance(category.name);
 
-      if (x < 0 || x > 100 || y < 0 || y > 100) return;
+      const marker = L.marker(latlng,{
+        icon:icon(symbol,color),
+        title:categoryName(category.name)+": "+title,
+        bubblingMouseEvents:false
+      }).bindPopup(
+        popup(title,description,categoryName(category.name))
+      ).addTo(communityLayer);
 
-      const look = appearance(category.name);
-      const marker = document.createElement("button");
+      count++;
 
-      marker.type = "button";
-      marker.className = "community-marker";
-      marker.style.left = x + "%";
-      marker.style.top = y + "%";
-      marker.style.background = look.color;
-      marker.textContent = look.symbol;
-      marker.title = categoryName(category.name) + ": " + title;
-      marker.setAttribute("aria-label", marker.title);
+      if(query) matches.push({title,category,marker});
+    });
+  }
 
-      marker.addEventListener("click", event => {
-        event.stopPropagation();
+  if(query){
+    matches.slice(0,60).forEach(item => {
+      const button = document.createElement("button");
+      button.textContent =
+        categoryName(item.category.name) + " · " + item.title;
 
-        alert(
-          categoryName(category.name) +
-          "\n\n" + title +
-          (description ? "\n\n" + description : "") +
-          "\n\n" +
-          text(
-            "Quelle: ABI-InteractiveMaps. Bedingungen und Angaben können veraltet sein.",
-            "Source: ABI-InteractiveMaps. Requirements and details may be outdated."
-          )
+      button.addEventListener("click",() => {
+        leafletMap.setView(
+          item.marker.getLatLng(),
+          Math.max(leafletMap.getZoom(),-1)
         );
+        item.marker.openPopup();
       });
 
-      fragment.append(marker);
-      shown++;
+      $("results").append(button);
     });
 
-    layer.append(fragment);
+    if(!matches.length || matches.length>60){
+      const p = document.createElement("p");
+      p.className = "help";
+      p.textContent = matches.length ? t("limited") : t("noResults");
+      $("results").append(p);
+    }
+  }
 
-    info.textContent = text(
-      shown + " von " + data.markers.length + " Markern sichtbar.",
-      shown + " of " + data.markers.length + " markers visible."
+  updateSummary(count);
+}
+
+function drawOwn(){
+  if(!ownLayer) return;
+  ownLayer.clearLayers();
+  translate();
+
+  if(!bounds || !imageLayer) return;
+
+  const markers = state().markers;
+  const route = markers.filter(m => m.type === "route");
+
+  if(route.length>1){
+    L.polyline(route.map(positionToLatLng),{
+      color:"#c2ee75",
+      weight:3,
+      dashArray:"8 6",
+      interactive:false
+    }).addTo(ownLayer);
+  }
+
+  markers.forEach(m => {
+    const symbols = {
+      player:"P",note:"N",loot:"L",exit:"E",
+      route:String(route.findIndex(r => r.id===m.id)+1)
+    };
+
+    const colors = {
+      player:"#c2ee75",note:"#d6a3ff",loot:"#ffd369",
+      exit:"#69caff",route:"#ffffff"
+    };
+
+    const title = m.name || (
+      m.type === "route"
+        ? t("routePoint")+" "+symbols.route
+        : t(m.type)
     );
 
-    if (errors.has(selected)) {
-      info.textContent += text(
-        " Aktualisierung fehlgeschlagen; vorheriger Stand bleibt sichtbar.",
-        " Refresh failed; previous data remains visible."
-      );
-    }
-  }
+    const marker = L.marker(positionToLatLng(m),{
+      icon:icon(symbols[m.type],colors[m.type],true),
+      title,
+      draggable:true,
+      zIndexOffset:1000,
+      bubblingMouseEvents:false
+    }).bindPopup(popup(title,"",t(m.type),m.id)).addTo(ownLayer);
 
-  async function loadMarkers(force = false) {
-    const id = selected;
-    const file = files[id];
-
-    if (!file || loading.has(id)) return;
-    if (datasets.has(id) && !force) return;
-
-    loading.add(id);
-    errors.delete(id);
-    drawCommunity();
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 25000);
-
-    try {
-      const url = root + "coordinates/" + file + ".json";
-      const response = await fetch(
-        url + (force ? "?refresh=" + Date.now() : ""),
-        { signal: controller.signal }
-      );
-
-      if (!response.ok) throw new Error("HTTP " + response.status);
-
-      const data = await response.json();
-
-      if (
-        !Array.isArray(data.categories) ||
-        !Array.isArray(data.markers) ||
-        !Array.isArray(data.mapBounds) ||
-        data.coordinateOrder !== "xy" ||
-        data.origin !== "bottom-left"
-      ) {
-        throw new Error("Unexpected map format");
-      }
-
-      const bounds = data.mapBounds;
-
-      if (
-        bounds.length !== 2 ||
-        !bounds.every(p =>
-          Array.isArray(p) &&
-          p.length === 2 &&
-          p.every(Number.isFinite)
-        ) ||
-        bounds[1][0] <= bounds[0][0] ||
-        bounds[1][1] <= bounds[0][1]
-      ) {
-        throw new Error("Invalid map bounds");
-      }
-
-      data.categories = data.categories.filter(c =>
-        c && typeof c.name === "string" && c.id != null
-      );
-
-      data.markers = data.markers.filter(m =>
-        m &&
-        Array.isArray(m.position) &&
-        m.position.length === 2 &&
-        m.position.every(Number.isFinite)
-      );
-
-      datasets.set(id, data);
-    } catch (error) {
-      errors.add(id);
-    } finally {
-      clearTimeout(timer);
-      loading.delete(id);
-
-      if (selected === id) drawCommunity();
-    }
-  }
-
-  searchInput.addEventListener("input", () => {
-    search = searchInput.value;
-    drawCommunity();
-  });
-
-  allButton.addEventListener("click", () => {
-    hiddenCategories.clear();
-    drawCommunity();
-  });
-
-  noneButton.addEventListener("click", () => {
-    datasets.get(selected)?.categories.forEach(c => {
-      hiddenCategories.add(c.name);
+    marker.on("dragstart",snapshot);
+    marker.on("dragend",() => {
+      Object.assign(m,latLngToPosition(marker.getLatLng()));
+      save();
+      drawOwn();
     });
-    drawCommunity();
   });
 
-  reloadButton.addEventListener("click", () => loadMarkers(true));
+  drawCommunity();
+}
 
-  // Redraw community markers whenever the existing app redraws.
-  const originalRender = render;
+async function fetchData(file,force){
+  if(dataCache.has(file) && !force) return dataCache.get(file);
 
-  render = function() {
-    originalRender();
-    drawCommunity();
-  };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(),25000);
 
-  $("mapSelect").addEventListener("change", () => loadMarkers());
+  try {
+    const response = await fetch(
+      ROOT+"coordinates/"+file+".json"+
+      (force ? "?refresh="+Date.now() : ""),
+      {signal:controller.signal}
+    );
 
-  render();
-  loadMarkers();
-})();
+    if(!response.ok) throw new Error("Data unavailable");
+    const d = await response.json();
+
+    if(
+      d.origin!=="bottom-left" ||
+      d.coordinateOrder!=="xy" ||
+      !Array.isArray(d.categories) ||
+      !Array.isArray(d.markers) ||
+      !Array.isArray(d.mapBounds) ||
+      d.mapBounds.length!==2 ||
+      !d.mapBounds.every(p =>
+        Array.isArray(p) && p.length===2 && p.every(Number.isFinite)
+      ) ||
+      d.mapBounds[1][0]<=d.mapBounds[0][0] ||
+      d.mapBounds[1][1]<=d.mapBounds[0][1]
+    ) throw new Error("Invalid map data");
+
+    d.categories = d.categories.filter(c =>
+      c && c.id!=null && typeof c.name==="string"
+    );
+
+    d.markers = d.markers.filter(m =>
+      m && Array.isArray(m.position) &&
+      m.position.length===2 && m.position.every(Number.isFinite)
+    );
+
+    dataCache.set(file,d);
+    return d;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function preloadImage(url){
+  return new Promise((resolve,reject) => {
+    const img = new Image();
+
+    const timer = setTimeout(() => {
+      img.onload = img.onerror = null;
+      img.src = "";
+      reject(new Error("Image timeout"));
+    },60000);
+
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error("Image unavailable"));
+    };
+
+    img.src = url;
+  });
+}
+
+async function loadSelected(force=false){
+  if(!leafletMap) return;
+
+  const token = ++requestId;
+  const id = selected;
+  const s = state();
+  const config = configs[id];
+
+  loading = true;
+  currentData = null;
+  bounds = null;
+
+  if(imageLayer){
+    leafletMap.removeLayer(imageLayer);
+    imageLayer = null;
+  }
+
+  communityLayer.clearLayers();
+  ownLayer.clearLayers();
+  leafletMap.closePopup();
+  leafletMap.setMaxBounds(null);
+  $("categories").replaceChildren();
+  $("results").replaceChildren();
+  updateSummary(0);
+  setStatus("loading");
+  translate();
+
+  const imageUrl = s.image || (
+    config.file ? ROOT+"maps/"+config.file+".png" : ""
+  );
+
+  if(!imageUrl){
+    loading = false;
+    setStatus("missing");
+    translate();
+    return;
+  }
+
+  const results = await Promise.allSettled([
+    preloadImage(imageUrl),
+    config.file && !s.image
+      ? fetchData(config.file,force)
+      : Promise.resolve(null)
+  ]);
+
+  if(token!==requestId) return;
+
+  loading = false;
+
+  if(results[0].status!=="fulfilled"){
+    setStatus("failed");
+    translate();
+    return;
+  }
+
+  const img = results[0].value;
+  const data = results[1].status==="fulfilled"
+    ? results[1].value : null;
+
+  currentData = data;
+
+  if(data){
+    const [[x0,y0],[x1,y1]] = data.mapBounds;
+    bounds = L.latLngBounds([y0,x0],[y1,x1]);
+  } else {
+    bounds = L.latLngBounds(
+      [0,0],
+      [1080,1080*img.naturalWidth/img.naturalHeight]
+    );
+  }
+
+  imageLayer = L.imageOverlay(imageUrl,bounds,{
+    interactive:false,
+    alt:config.name
+  }).addTo(leafletMap);
+
+  imageLayer.on("error",() => {
+    if(token===requestId) setStatus("failed");
+  });
+
+  leafletMap.setMaxBounds(bounds.pad(.25));
+  leafletMap.invalidateSize();
+  leafletMap.fitBounds(bounds,{padding:[12,12],animate:false});
+
+  buildFilters();
+  drawOwn();
+
+  setStatus(
+    s.image ? "customReady" :
+    data ? "ready" : "dataFailed"
+  );
+
+  translate();
+}
+
+$("language").addEventListener("click",() => {
+  lang = lang==="de" ? "en" : "de";
+  save();
+  translate();
+  buildFilters();
+  drawOwn();
+});
+
+$("mapSelect").value = selected;
+$("mapSelect").addEventListener("change",() => {
+  selected = $("mapSelect").value;
+  savePrefs();
+  loadSelected();
+});
+
+document.querySelectorAll("[data-tool]").forEach(button => {
+  button.addEventListener("click",() => {
+    tool = button.dataset.tool;
+    translate();
+  });
+});
+
+$("search").addEventListener("input",drawCommunity);
+
+$("showAll").addEventListener("click",() => {
+  hidden.clear();
+  savePrefs();
+  buildFilters();
+  drawCommunity();
+});
+
+$("hideAll").addEventListener("click",() => {
+  currentData?.categories.forEach(c => hidden.add(c.name));
+  savePrefs();
+  buildFilters();
+  drawCommunity();
+});
+
+$("refresh").addEventListener("click",() => loadSelected(true));
+
+$("fit").addEventListener("click",() => {
+  if(bounds) leafletMap.fitBounds(bounds,{padding:[12,12]});
+});
+
+$("undo").addEventListener("click",() => {
+  const stack = undoStacks[selected];
+  if(!stack?.length) return;
+  state().markers = stack.pop();
+  save();
+  drawOwn();
+});
+
+$("clearOwn").addEventListener("click",() => {
+  if(!state().markers.length || !confirm(t("confirmClear"))) return;
+  snapshot();
+  state().markers = [];
+  save();
+  drawOwn();
+});
+
+$("original").addEventListener("click",() => {
+  if(!configs[selected].file || !state().image) return;
+  if(state().markers.length && !confirm(t("confirmImage"))) return;
+
+  state().image = "";
+  state().markers = [];
+  undoStacks[selected] = [];
+  save();
+  loadSelected();
+});
+
+$("upload").addEventListener("change",async event => {
+  const file = event.target.files[0];
+  event.target.value = "";
+
+  if(!file) return;
+
+  if(
+    !["image/png","image/jpeg","image/webp"].includes(file.type) ||
+    file.size>15*1024*1024
+  ){
+    setStatus("uploadFailed");
+    return;
+  }
+
+  const target = selected;
+  const s = state();
+
+  if(s.markers.length && !confirm(t("confirmImage"))) return;
+
+  const url = URL.createObjectURL(file);
+
+  try {
+    const img = await preloadImage(url);
+    const scale = Math.min(
+      1,1800/Math.max(img.naturalWidth,img.naturalHeight)
+    );
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1,Math.round(img.naturalWidth*scale));
+    canvas.height = Math.max(1,Math.round(img.naturalHeight*scale));
+
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#101613";
+    context.fillRect(0,0,canvas.width,canvas.height);
+    context.drawImage(img,0,0,canvas.width,canvas.height);
+
+    storedMaps[target] = {
+      image:canvas.toDataURL("image/jpeg",.85),
+      ratio:canvas.width/canvas.height,
+      markers:[]
+    };
+
+    undoStacks[target] = [];
+    save();
+
+    if(selected===target) loadSelected();
+  } catch(e){
+    setStatus("uploadFailed");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+});
+
+translate();
+
+if(typeof L==="undefined"){
+  setStatus("libraryFailed");
+} else {
+  leafletMap = L.map("map",{
+    crs:L.CRS.Simple,
+    minZoom:-6,
+    maxZoom:3,
+    zoomSnap:.25,
+    zoomDelta:.5,
+    scrollWheelZoom:true,
+    touchZoom:true,
+    dragging:true,
+    doubleClickZoom:false,
+    maxBoundsViscosity:.8
+  }).setView([540,960],-2);
+
+  communityLayer = L.layerGroup().addTo(leafletMap);
+  ownLayer = L.layerGroup().addTo(leafletMap);
+
+  leafletMap.on("click",event => {
+    if(tool==="inspect") return;
+
+    if(!bounds || !imageLayer){
+      setStatus("empty");
+      return;
+    }
+
+    if(!bounds.contains(event.latlng)) return;
+
+    snapshot();
+
+    if(tool==="player"){
+      state().markers = state().markers.filter(m => m.type!=="player");
+    }
+
+    const position = latLngToPosition(event.latlng);
+
+    state().markers.push({
+      id:Date.now().toString(36)+Math.random().toString(36).slice(2),
+      type:tool,
+      name:$("markerName").value.trim(),
+      ...position
+    });
+
+    save();
+    drawOwn();
+  });
+
+  if(typeof ResizeObserver!=="undefined"){
+    new ResizeObserver(() => {
+      leafletMap.invalidateSize({pan:false});
+    }).observe($("map"));
+  }
+
+  loadSelected();
+}
 </script>
 </body>
 </html>
